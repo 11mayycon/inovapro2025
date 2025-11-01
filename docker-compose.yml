@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+  pdv:
+    build: .
+    container_name: inovapro-pdv
+    restart: always
+    ports:
+      - "3001:80"
+    networks:
+      - inovapro-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pdv-http.rule=Host(`ct.inovapro.cloud`)"
+      - "traefik.http.routers.pdv-http.entrypoints=web"
+      - "traefik.http.routers.pdv-http.service=pdv"
+      - "traefik.http.routers.pdv-https.rule=Host(`ct.inovapro.cloud`)"
+      - "traefik.http.routers.pdv-https.entrypoints=websecure"
+      - "traefik.http.routers.pdv-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.pdv-https.service=pdv"
+      - "traefik.http.services.pdv.loadbalancer.server.port=80"
+
+  bot-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile.bot
+    container_name: inovapro-bot-proxy
+    restart: always
+    ports:
+      - "4001:4000"
+    environment:
+      - EVOLUTION_API_URL=http://evolution_api:8080
+      - EVOLUTION_API_KEY=BQYHJGJHJ
+      - INSTANCE_NAME=pdv-inovapro-bot
+      - PORT=4000
+    networks:
+      - inovapro-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bot-http.rule=Host(`ct.inovapro.cloud`) && PathPrefix(`/api/bot`)"
+      - "traefik.http.routers.bot-http.entrypoints=web"
+      - "traefik.http.routers.bot-http.middlewares=bot-strip"
+      - "traefik.http.routers.bot-http.service=bot"
+      - "traefik.http.routers.bot-https.rule=Host(`ct.inovapro.cloud`) && PathPrefix(`/api/bot`)"
+      - "traefik.http.routers.bot-https.entrypoints=websecure"
+      - "traefik.http.routers.bot-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.bot-https.middlewares=bot-strip"
+      - "traefik.http.routers.bot-https.service=bot"
+      - "traefik.http.middlewares.bot-strip.stripprefix.prefixes=/api/bot"
+      - "traefik.http.services.bot.loadbalancer.server.port=4000"
+
+networks:
+  inovapro-net:
+    external: true

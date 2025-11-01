@@ -58,22 +58,52 @@ export default function PDV() {
     if (!user) return;
 
     try {
-      // Buscar vendas do dia atual (00:00 às 23:59)
-      const dayStart = startOfDay(new Date());
-      const dayEnd = endOfDay(new Date());
+      // Para admin, mostrar vendas do dia (comportamento anterior)
+      if (isAdmin) {
+        const dayStart = startOfDay(new Date());
+        const dayEnd = endOfDay(new Date());
 
-      let query = supabase
-        .from('sales')
-        .select('total')
-        .gte('created_at', dayStart.toISOString())
-        .lte('created_at', dayEnd.toISOString());
+        const { data, error } = await supabase
+          .from('sales')
+          .select('total')
+          .gte('created_at', dayStart.toISOString())
+          .lte('created_at', dayEnd.toISOString());
 
-      // Se não for admin, filtrar apenas vendas do usuário
-      if (!isAdmin) {
-        query = query.eq('user_id', user.id);
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          const total = data.reduce((sum, sale) => sum + Number(sale.total), 0);
+          const count = data.length;
+          const average = total / count;
+
+          setShiftSummary({ total, count, average });
+        } else {
+          setShiftSummary({ total: 0, count: 0, average: 0 });
+        }
+        return;
       }
 
-      const { data, error } = await query;
+      // Para funcionários, buscar vendas apenas do turno ativo atual
+      const { data: activeShift, error: shiftError } = await supabase
+        .from('active_shifts')
+        .select('start_time')
+        .eq('user_id', user.id)
+        .order('start_time', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (shiftError || !activeShift) {
+        // Se não há turno ativo, mostrar zeros
+        setShiftSummary({ total: 0, count: 0, average: 0 });
+        return;
+      }
+
+      // Buscar vendas desde o início do turno ativo
+      const { data, error } = await supabase
+        .from('sales')
+        .select('total')
+        .eq('user_id', user.id)
+        .gte('created_at', activeShift.start_time);
 
       if (error) throw error;
 
@@ -96,53 +126,119 @@ export default function PDV() {
 
     setLoadingSalesItems(true);
     try {
-      // Buscar vendas do dia atual
-      const dayStart = startOfDay(new Date());
-      const dayEnd = endOfDay(new Date());
+      // Para admin, mostrar vendas do dia (comportamento anterior)
+      if (isAdmin) {
+        const dayStart = startOfDay(new Date());
+        const dayEnd = endOfDay(new Date());
 
-      let query = supabase
-        .from('sales')
-        .select('id')
-        .gte('created_at', dayStart.toISOString())
-        .lte('created_at', dayEnd.toISOString());
+        const { data: sales, error: salesError } = await supabase
+          .from('sales')
+          .select('id, created_at')
+          .gte('created_at', dayStart.toISOString())
+          .lte('created_at', dayEnd.toISOString())
+          .order('created_at', { ascending: false });
 
-      // Se não for admin, filtrar apenas vendas do usuário
-      if (!isAdmin) {
-        query = query.eq('user_id', user.id);
+        if (salesError) throw salesError;
+
+        if (sales && sales.length > 0) {
+          // Buscar itens de todas as vendas com informações da venda
+          const { data: items, error: itemsError } = await supabase
+            .from('sale_items')
+            .select('*, sales!inner(created_at)')
+            .in('sale_id', sales.map(s => s.id));
+
+          if (itemsError) throw itemsError;
+
+          // Agrupar itens por produto, mantendo a venda mais recente de cada produto
+          const groupedItems = (items || []).reduce((acc: any[], item) => {
+            const existingItem = acc.find(i => i.nome_produto === item.nome_produto);
+            if (existingItem) {
+              existingItem.quantidade += item.quantidade;
+              existingItem.total += item.quantidade * item.preco_unitario;
+              // Manter a data da venda mais recente
+              if (new Date(item.sales.created_at) > new Date(existingItem.last_sale_date)) {
+                existingItem.last_sale_date = item.sales.created_at;
+              }
+            } else {
+              acc.push({
+                nome_produto: item.nome_produto,
+                quantidade: item.quantidade,
+                preco_unitario: item.preco_unitario,
+                total: item.quantidade * item.preco_unitario,
+                last_sale_date: item.sales.created_at,
+              });
+            }
+            return acc;
+          }, []);
+
+          // Ordenar por data da venda mais recente (mais recentes primeiro)
+          groupedItems.sort((a, b) => new Date(b.last_sale_date).getTime() - new Date(a.last_sale_date).getTime());
+
+          setSalesItems(groupedItems);
+        } else {
+          setSalesItems([]);
+        }
+        return;
       }
 
-      const { data: sales, error: salesError } = await query;
+      // Para funcionários, buscar vendas apenas do turno ativo atual
+      const { data: activeShift, error: shiftError } = await supabase
+        .from('active_shifts')
+        .select('start_time')
+        .eq('user_id', user.id)
+        .order('start_time', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (shiftError || !activeShift) {
+        // Se não há turno ativo, não mostrar itens
+        setSalesItems([]);
+        return;
+      }
+
+      // Buscar vendas desde o início do turno ativo
+      const { data: sales, error: salesError } = await supabase
+        .from('sales')
+        .select('id, created_at')
+        .eq('user_id', user.id)
+        .gte('created_at', activeShift.start_time)
+        .order('created_at', { ascending: false });
 
       if (salesError) throw salesError;
 
       if (sales && sales.length > 0) {
-        // Buscar itens de todas as vendas
+        // Buscar itens de todas as vendas do turno com informações da venda
         const { data: items, error: itemsError } = await supabase
           .from('sale_items')
-          .select('*')
+          .select('*, sales!inner(created_at)')
           .in('sale_id', sales.map(s => s.id));
 
         if (itemsError) throw itemsError;
 
-        // Agrupar itens por produto e somar quantidades
+        // Agrupar itens por produto, mantendo a venda mais recente de cada produto
         const groupedItems = (items || []).reduce((acc: any[], item) => {
           const existingItem = acc.find(i => i.nome_produto === item.nome_produto);
           if (existingItem) {
             existingItem.quantidade += item.quantidade;
             existingItem.total += item.quantidade * item.preco_unitario;
+            // Manter a data da venda mais recente
+            if (new Date(item.sales.created_at) > new Date(existingItem.last_sale_date)) {
+              existingItem.last_sale_date = item.sales.created_at;
+            }
           } else {
             acc.push({
               nome_produto: item.nome_produto,
               quantidade: item.quantidade,
               preco_unitario: item.preco_unitario,
               total: item.quantidade * item.preco_unitario,
+              last_sale_date: item.sales.created_at,
             });
           }
           return acc;
         }, []);
 
-        // Ordenar por quantidade decrescente
-        groupedItems.sort((a, b) => b.quantidade - a.quantidade);
+        // Ordenar por data da venda mais recente (mais recentes primeiro)
+        groupedItems.sort((a, b) => new Date(b.last_sale_date).getTime() - new Date(a.last_sale_date).getTime());
 
         setSalesItems(groupedItems);
       } else {
@@ -609,7 +705,7 @@ export default function PDV() {
             <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-3 shadow-lg">
               <ShoppingCart className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-white">📈 Resumo de Vendas do Turno</h3>
+            <h3 className="text-xl font-bold text-white">📈 Resumo do Turno Atual</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -937,7 +1033,7 @@ export default function PDV() {
       <Dialog open={showSalesDialog} onOpenChange={setShowSalesDialog}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Itens Vendidos Hoje</DialogTitle>
+            <DialogTitle>Itens Vendidos no Turno</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             {loadingSalesItems ? (
@@ -948,7 +1044,7 @@ export default function PDV() {
             ) : salesItems.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <ShoppingCart className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p>Nenhum item vendido hoje</p>
+                <p>Nenhum item vendido no turno</p>
               </div>
             ) : (
               <>

@@ -1,0 +1,15 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Instalar apenas as dependências necessárias
+RUN npm install express cors axios
+
+# Copiar arquivo do bot
+COPY bot-proxy.js .
+
+# Expor porta
+EXPOSE 4000
+
+# Iniciar servidor
+CMD ["node", "bot-proxy.js"]

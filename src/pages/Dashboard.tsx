@@ -24,6 +24,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { StartShiftDialog } from '@/components/StartShiftDialog';
 import { AnimatedUsername } from '@/components/AnimatedUsername';
+import { CurrentDateTime } from '@/components/CurrentDateTime';
 import backgroundImg from '@/assets/posto-rodoil-bg.jpg';
 
 export default function Dashboard() {
@@ -222,6 +223,12 @@ export default function Dashboard() {
                   <p className="text-sm text-blue-200">Sistema de Gestão</p>
                 </div>
               </div>
+              
+              {/* Data e Horário no centro */}
+              <div className="hidden md:block">
+                <CurrentDateTime />
+              </div>
+              
               <div className="flex items-center gap-4">
                 <div className="text-right">
                   <AnimatedUsername name={user?.name || 'Usuário'} />
@@ -236,6 +243,11 @@ export default function Dashboard() {
                   Sair
                 </Button>
               </div>
+            </div>
+            
+            {/* Data e Horário para mobile */}
+            <div className="md:hidden mt-3 flex justify-center">
+              <CurrentDateTime />
             </div>
           </div>
         </header>

@@ -55,14 +55,48 @@ export default function HistoricoVendas() {
         query = query.eq('user_id', user?.id);
       }
 
-      // Sempre filtrar para o dia atual (00:00 às 23:59)
-      const targetDate = filterDate ? new Date(filterDate) : new Date();
-      const dayStart = startOfDay(targetDate);
-      const dayEnd = endOfDay(targetDate);
-      
-      query = query
-        .gte('created_at', dayStart.toISOString())
-        .lte('created_at', dayEnd.toISOString());
+      if (isAdmin) {
+        // Administradores veem vendas do dia (comportamento anterior)
+        const targetDate = filterDate ? new Date(filterDate) : new Date();
+        const dayStart = startOfDay(targetDate);
+        const dayEnd = endOfDay(targetDate);
+        
+        query = query
+          .gte('created_at', dayStart.toISOString())
+          .lte('created_at', dayEnd.toISOString());
+      } else {
+        // Usuários regulares veem apenas vendas do turno atual
+        if (filterDate) {
+          // Se há filtro de data, usar a data específica
+          const targetDate = new Date(filterDate);
+          const dayStart = startOfDay(targetDate);
+          const dayEnd = endOfDay(targetDate);
+          
+          query = query
+            .gte('created_at', dayStart.toISOString())
+            .lte('created_at', dayEnd.toISOString());
+        } else {
+          // Buscar turno ativo do usuário
+          const { data: activeShift } = await supabase
+            .from('active_shifts')
+            .select('start_time')
+            .eq('user_id', user?.id)
+            .single();
+
+          if (activeShift?.start_time) {
+            // Filtrar vendas a partir do início do turno
+            query = query.gte('created_at', activeShift.start_time);
+          } else {
+            // Se não há turno ativo, mostrar vendas do dia atual
+            const dayStart = startOfDay(new Date());
+            const dayEnd = endOfDay(new Date());
+            
+            query = query
+              .gte('created_at', dayStart.toISOString())
+              .lte('created_at', dayEnd.toISOString());
+          }
+        }
+      }
 
       const { data, error } = await query;
       if (error) throw error;
@@ -240,7 +274,7 @@ export default function HistoricoVendas() {
         <Card className="p-4 bg-gradient-to-br from-primary to-primary-hover text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm opacity-90">Total do Dia</p>
+              <p className="text-sm opacity-90">{isAdmin ? 'Total do Dia' : 'Total do Turno'}</p>
               <p className="text-3xl font-bold">R$ {totalGeral.toFixed(2)}</p>
             </div>
             <DollarSign className="w-12 h-12 opacity-80" />
@@ -285,7 +319,9 @@ export default function HistoricoVendas() {
                 <p className="text-xs text-muted-foreground">
                   {filterDate 
                     ? `Mostrando vendas de ${format(new Date(filterDate), "dd/MM/yyyy", { locale: ptBR })}`
-                    : `Mostrando vendas de hoje (${format(new Date(), "dd/MM/yyyy", { locale: ptBR })})`
+                    : isAdmin 
+                      ? `Mostrando vendas de hoje (${format(new Date(), "dd/MM/yyyy", { locale: ptBR })})`
+                      : `Mostrando vendas do turno atual`
                   }
                 </p>
               </div>
@@ -296,7 +332,9 @@ export default function HistoricoVendas() {
         {sales.length === 0 ? (
           <Card className="p-12 text-center">
             <FileText className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <p className="text-muted-foreground">Nenhuma venda registrada</p>
+            <p className="text-muted-foreground">
+              {isAdmin ? 'Nenhuma venda registrada' : 'Nenhuma venda registrada no turno'}
+            </p>
           </Card>
         ) : (
           sales.map((sale) => (

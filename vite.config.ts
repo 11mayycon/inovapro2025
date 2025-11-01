@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from 'vite-plugin-pwa';
@@ -49,7 +49,7 @@ export default defineConfig(({ mode }) => ({
             src: 'apple-touch-icon.png',
             sizes: '180x180',
             type: 'image/png',
-            purpose: 'apple touch icon'
+            purpose: 'any'
           }
         ]
       },
@@ -94,7 +94,7 @@ export default defineConfig(({ mode }) => ({
   ].filter(Boolean),
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(process.cwd(), "./src"),
     },
   },
 }));
