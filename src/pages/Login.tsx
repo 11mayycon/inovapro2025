@@ -23,24 +23,32 @@ export default function Login() {
   // Auto login quando CPF completo (11 dígitos)
   useEffect(() => {
     const cleanCpf = employeeData.cpf.replace(/\D/g, '');
-    if (cleanCpf.length === 11 && activeTab === 'employee' && !loading) {
+    console.log('CPF digitado:', cleanCpf, 'Tamanho:', cleanCpf.length);
+    if (cleanCpf.length === 11 && activeTab === 'employee' && !loading && !showWelcome) {
+      console.log('Iniciando login automático...');
       handleEmployeeLogin();
     }
   }, [employeeData.cpf]);
 
   const handleEmployeeLogin = async () => {
+    console.log('handleEmployeeLogin chamado');
     setLoading(true);
     const { error, user } = await login(employeeData.cpf, employeeData.cpf, false);
     
+    console.log('Resultado do login:', { error, user });
+    
     if (error) {
+      console.error('Erro no login:', error);
       toast({
         variant: 'destructive',
         title: 'Erro ao fazer login',
         description: error,
       });
       setLoading(false);
-    } else {
-      setUserName(user?.name || 'Usuário');
+      setEmployeeData({ cpf: '' }); // Limpa o CPF em caso de erro
+    } else if (user) {
+      console.log('Login bem-sucedido, mostrando boas-vindas');
+      setUserName(user.name || 'Usuário');
       setShowWelcome(true);
       setTimeout(() => {
         navigate('/dashboard');
