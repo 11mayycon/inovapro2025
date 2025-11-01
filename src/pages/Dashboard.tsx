@@ -25,7 +25,10 @@ import { useNavigate } from 'react-router-dom';
 import { StartShiftDialog } from '@/components/StartShiftDialog';
 import { AnimatedUsername } from '@/components/AnimatedUsername';
 import { CurrentDateTime } from '@/components/CurrentDateTime';
+import { BottomNavBar } from '@/components/BottomNavBar';
+import { PDVHeader } from '@/components/PDVHeader';
 import backgroundImg from '@/assets/posto-rodoil-bg.jpg';
+import PDV from './PDV';
 
 export default function Dashboard() {
   const { user, logout, isAdmin } = useAuth();
@@ -193,14 +196,33 @@ export default function Dashboard() {
     return <StartShiftDialog onShiftStarted={handleShiftStarted} />;
   }
 
-  return (
-    <div className="min-h-screen bg-cover bg-center bg-fixed relative" style={{ backgroundImage: `url(${backgroundImg})` }}>
-      {/* Overlay escuro para melhorar legibilidade */}
+  // Preparar cards de navegação para a barra inferior (desktop)
+  const navCards = cards
+    .filter(card => card.show && card.path !== '/pdv')
+    .map(card => ({
+      title: card.title,
+      icon: card.icon,
+      path: card.path,
+      color: card.color.replace('from-primary', 'from-green-500').replace('to-primary-hover', 'to-green-600'),
+    }));
+
+  // Layout Desktop com PDV principal
+  const DesktopLayout = () => (
+    <div className="hidden lg:flex flex-col min-h-screen">
+      <PDVHeader />
+      <div className="flex-1 pb-24">
+        <PDV />
+      </div>
+      <BottomNavBar cards={navCards} />
+    </div>
+  );
+
+  // Layout Mobile - mantém o design atual
+  const MobileLayout = () => (
+    <div className="lg:hidden min-h-screen bg-cover bg-center bg-fixed relative" style={{ backgroundImage: `url(${backgroundImg})` }}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
       
-      {/* Content */}
       <div className="relative z-10">
-        {/* Header */}
         <header className="bg-blue-900/90 backdrop-blur-md border-b-2 border-blue-700 shadow-lg shadow-blue-500/20">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
@@ -224,11 +246,6 @@ export default function Dashboard() {
                 </div>
               </div>
               
-              {/* Data e Horário no centro */}
-              <div className="hidden md:block">
-                <CurrentDateTime />
-              </div>
-              
               <div className="flex items-center gap-4">
                 <div className="text-right">
                   <AnimatedUsername name={user?.name || 'Usuário'} />
@@ -245,14 +262,12 @@ export default function Dashboard() {
               </div>
             </div>
             
-            {/* Data e Horário para mobile */}
-            <div className="md:hidden mt-3 flex justify-center">
+            <div className="mt-3 flex justify-center">
               <CurrentDateTime />
             </div>
           </div>
         </header>
 
-        {/* Main Content */}
         <main className="container mx-auto px-4 py-8">
           <div className="mb-8">
             <h2 className="text-3xl font-bold mb-2 text-white drop-shadow-lg">
@@ -263,7 +278,7 @@ export default function Dashboard() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {cards.filter(card => card.show).map((card) => {
               const Icon = card.icon;
               return (
@@ -287,5 +302,12 @@ export default function Dashboard() {
         </main>
       </div>
     </div>
+  );
+
+  return (
+    <>
+      <DesktopLayout />
+      <MobileLayout />
+    </>
   );
 }
