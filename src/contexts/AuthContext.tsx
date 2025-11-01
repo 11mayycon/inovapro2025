@@ -13,7 +13,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (emailOrCpf: string, password: string, isAdmin?: boolean) => Promise<{ error?: string }>;
+  login: (emailOrCpf: string, password: string, isAdmin?: boolean) => Promise<{ error?: string; user?: User }>;
   logout: () => Promise<void>;
   isAdmin: boolean;
 }
@@ -93,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       setUser(userInfo);
       localStorage.setItem('rodoil_user', JSON.stringify(userInfo));
-      return {};
+      return { user: userInfo };
     } catch (error) {
       console.error('Login error:', error);
       return { error: 'Erro ao fazer login' };

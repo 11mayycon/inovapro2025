@@ -14,6 +14,8 @@ export default function Login() {
   const [adminData, setAdminData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('employee');
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [userName, setUserName] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -28,7 +30,7 @@ export default function Login() {
 
   const handleEmployeeLogin = async () => {
     setLoading(true);
-    const { error } = await login(employeeData.cpf, employeeData.cpf, false);
+    const { error, user } = await login(employeeData.cpf, employeeData.cpf, false);
     
     if (error) {
       toast({
@@ -38,11 +40,11 @@ export default function Login() {
       });
       setLoading(false);
     } else {
-      toast({
-        title: 'Login realizado com sucesso!',
-        description: 'Bem-vindo ao caminho certo',
-      });
-      navigate('/dashboard');
+      setUserName(user?.name || 'Usuário');
+      setShowWelcome(true);
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 3000);
     }
   };
 
@@ -51,7 +53,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await login(adminData.email, adminData.password, true);
+    const { error, user } = await login(adminData.email, adminData.password, true);
     
     if (error) {
       toast({
@@ -61,14 +63,30 @@ export default function Login() {
       });
       setLoading(false);
     } else {
-      toast({
-        title: 'Login realizado com sucesso!',
-        description: 'Bem-vindo ao caminho certo',
-      });
-      navigate('/dashboard');
+      setUserName(user?.name || 'Administrador');
+      setShowWelcome(true);
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 3000);
     }
   };
 
+
+  if (showWelcome) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 relative">
+        <BackgroundSlider />
+        <div className="text-center relative z-10 animate-fade-in">
+          <div className="flex justify-center mb-6">
+            <img src={logoImage} alt="RodOil Logo" className="w-32 h-32" />
+          </div>
+          <h1 className="text-5xl font-bold text-white mb-4">Bem-vindo(a)</h1>
+          <h2 className="text-3xl font-bold text-white mb-6">{userName}</h2>
+          <p className="text-2xl text-white/90">Tenha um ótimo dia!</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative">
