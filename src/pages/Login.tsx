@@ -1,29 +1,33 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Lock, Mail, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import logoImage from '@/assets/rodoil-logo.png';
 import { BackgroundSlider } from '@/components/BackgroundSlider';
+import { WelcomeAnimation } from '@/components/WelcomeAnimation';
 
 export default function Login() {
   const [employeeData, setEmployeeData] = useState({ cpf: '' });
   const [adminData, setAdminData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('employee');
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleEmployeeLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  // Auto login quando CPF completo (11 dígitos)
+  useEffect(() => {
+    const cleanCpf = employeeData.cpf.replace(/\D/g, '');
+    if (cleanCpf.length === 11 && activeTab === 'employee' && !loading) {
+      handleEmployeeLogin();
+    }
+  }, [employeeData.cpf]);
 
-    // Login de funcionário sem senha - usa CPF como senha também
+  const handleEmployeeLogin = async () => {
+    setLoading(true);
     const { error } = await login(employeeData.cpf, employeeData.cpf, false);
     
     if (error) {
@@ -41,6 +45,7 @@ export default function Login() {
       navigate('/dashboard');
     }
   };
+
 
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,95 +73,88 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative">
       <BackgroundSlider />
-      <Card className="w-full max-w-md p-8 space-y-6 relative z-10 shadow-2xl backdrop-blur-sm bg-card/95">
-        <div className="text-center space-y-2">
-          <div className="flex justify-center mb-4">
-            <img src={logoImage} alt="RodOil Logo" className="w-20 h-20" />
+      
+      <div className="w-full max-w-md relative z-10">
+        <div className="text-center space-y-6 mb-8">
+          <div className="flex justify-center">
+            <img src={logoImage} alt="RodOil Logo" className="w-24 h-24" />
           </div>
-          <h1 className="text-3xl font-bold">CAMINHO CERTO</h1>
-          <p className="text-muted-foreground">Sistema de Gerenciamento de Estoque</p>
+          <h1 className="text-4xl font-bold text-white">CAMINHO CERTO</h1>
+          <WelcomeAnimation />
         </div>
 
-        <Tabs defaultValue="employee" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="employee">Funcionário</TabsTrigger>
-            <TabsTrigger value="admin">Administrador</TabsTrigger>
-          </TabsList>
+        <div className="backdrop-blur-sm bg-card/20 p-6 rounded-lg">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="employee">Funcionário</TabsTrigger>
+              <TabsTrigger value="admin">Administrador</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="employee" className="space-y-4">
-            <form onSubmit={handleEmployeeLogin} className="space-y-4">
+            <TabsContent value="employee" className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="cpf">CPF</Label>
                 <div className="relative">
-                  <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70" />
                   <Input
                     id="cpf"
                     type="text"
-                    placeholder="000.000.000-00"
+                    placeholder="Digite seu CPF"
                     value={employeeData.cpf}
                     onChange={(e) => setEmployeeData({ cpf: e.target.value })}
-                    className="pl-10"
-                    required
+                    className="pl-10 bg-white/10 border-white/30 text-white placeholder:text-white/50 focus:bg-white/20"
+                    disabled={loading}
+                    autoFocus
                   />
                 </div>
+                {loading && (
+                  <p className="text-center text-white/70 text-sm">Entrando...</p>
+                )}
               </div>
+            </TabsContent>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-primary to-primary-hover"
-                disabled={loading}
-              >
-                {loading ? 'Entrando...' : 'Entrar'}
-              </Button>
-            </form>
-          </TabsContent>
-
-          <TabsContent value="admin" className="space-y-4">
-            <form onSubmit={handleAdminLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={adminData.email}
-                    onChange={(e) => setAdminData({ ...adminData, email: e.target.value })}
-                    className="pl-10"
-                    required
-                  />
+            <TabsContent value="admin" className="space-y-4">
+              <form onSubmit={handleAdminLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="Email"
+                      value={adminData.email}
+                      onChange={(e) => setAdminData({ ...adminData, email: e.target.value })}
+                      className="pl-10 bg-white/10 border-white/30 text-white placeholder:text-white/50 focus:bg-white/20"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="adm-password">Senha</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="adm-password"
-                    type="password"
-                    placeholder="••••••"
-                    value={adminData.password}
-                    onChange={(e) => setAdminData({ ...adminData, password: e.target.value })}
-                    className="pl-10"
-                    required
-                  />
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70" />
+                    <Input
+                      id="adm-password"
+                      type="password"
+                      placeholder="Senha"
+                      value={adminData.password}
+                      onChange={(e) => setAdminData({ ...adminData, password: e.target.value })}
+                      className="pl-10 bg-white/10 border-white/30 text-white placeholder:text-white/50 focus:bg-white/20"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-primary to-primary-hover"
-                disabled={loading}
-              >
-                {loading ? 'Entrando...' : 'Entrar'}
-              </Button>
-
-            </form>
-          </TabsContent>
-        </Tabs>
-      </Card>
+                <button 
+                  type="submit" 
+                  className="w-full bg-white/20 hover:bg-white/30 text-white font-bold py-3 rounded-md transition-all backdrop-blur-sm border border-white/30"
+                  disabled={loading}
+                >
+                  {loading ? 'Entrando...' : 'Entrar'}
+                </button>
+              </form>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
   );
 }
