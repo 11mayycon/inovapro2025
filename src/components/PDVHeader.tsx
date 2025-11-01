@@ -23,7 +23,7 @@ export function PDVHeader() {
               <Package className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl md:text-2xl font-bold neon-title uppercase">
+              <h1 className="text-2xl font-bold neon-title uppercase">
                 {'PDV INOVAPRO'.split('').map((char, i) => (
                   <span
                     key={i}
@@ -34,16 +34,16 @@ export function PDVHeader() {
                   </span>
                 ))}
               </h1>
-              <p className="text-xs md:text-sm text-blue-200">Sistema de Gestão</p>
+              <p className="text-sm text-blue-200">Sistema de Gestão</p>
             </div>
           </div>
           
-          <div className="hidden md:block">
+          <div className="flex-1 flex justify-center">
             <CurrentDateTime />
           </div>
           
-          <div className="flex items-center gap-2 md:gap-4">
-            <div className="text-right hidden sm:block">
+          <div className="flex items-center gap-4">
+            <div className="text-right">
               <AnimatedUsername name={user?.name || 'Usuário'} />
               <p className="text-xs text-blue-300">{user?.cargo}</p>
             </div>
@@ -53,14 +53,10 @@ export function PDVHeader() {
               size="sm"
               className="border-blue-500 hover:bg-blue-800/50 text-white hover:text-white"
             >
-              <LogOut className="w-4 h-4 md:mr-2" />
-              <span className="hidden md:inline">Sair</span>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sair
             </Button>
           </div>
-        </div>
-        
-        <div className="md:hidden mt-3 flex justify-center">
-          <CurrentDateTime />
         </div>
       </div>
     </header>
