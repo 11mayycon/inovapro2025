@@ -209,7 +209,6 @@ export default function Dashboard() {
   // Layout Desktop com PDV principal
   const DesktopLayout = () => (
     <div className="hidden lg:flex flex-col min-h-screen">
-      <PDVHeader />
       <div className="flex-1 pb-24">
         <PDV />
       </div>
