@@ -9,7 +9,7 @@ export function AnimatedUsername({ name }: AnimatedUsernameProps) {
   const welcomeText = "BEM VINDO(A)";
   const upperName = name.toUpperCase();
   const [displayText, setDisplayText] = useState("");
-  const [phase, setPhase] = useState<'welcome' | 'pause' | 'name'>('welcome');
+  const [phase, setPhase] = useState<'welcome' | 'eraseWelcome' | 'name' | 'eraseName'>('welcome');
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -20,25 +20,47 @@ export function AnimatedUsername({ name }: AnimatedUsernameProps) {
           setDisplayText(welcomeText.slice(0, currentIndex + 1));
           setCurrentIndex(prev => prev + 1);
         } else {
+          // Pausa antes de apagar
+          setTimeout(() => {
+            setPhase('eraseWelcome');
+            setCurrentIndex(welcomeText.length);
+          }, 1000);
+        }
+      } else if (phase === 'eraseWelcome') {
+        // Apagando "BEM VINDO(A)"
+        if (currentIndex > 0) {
+          setDisplayText(welcomeText.slice(0, currentIndex - 1));
+          setCurrentIndex(prev => prev - 1);
+        } else {
           // Pausa antes de digitar o nome
           setTimeout(() => {
             setPhase('name');
             setCurrentIndex(0);
-            setDisplayText(welcomeText + " ");
-          }, 800);
+          }, 500);
         }
       } else if (phase === 'name') {
         // Digitando o nome do usuário
         if (currentIndex < upperName.length) {
-          setDisplayText(welcomeText + " " + upperName.slice(0, currentIndex + 1));
+          setDisplayText(upperName.slice(0, currentIndex + 1));
           setCurrentIndex(prev => prev + 1);
+        } else {
+          // Pausa antes de apagar o nome
+          setTimeout(() => {
+            setPhase('eraseName');
+            setCurrentIndex(upperName.length);
+          }, 2000);
+        }
+      } else if (phase === 'eraseName') {
+        // Apagando o nome
+        if (currentIndex > 0) {
+          setDisplayText(upperName.slice(0, currentIndex - 1));
+          setCurrentIndex(prev => prev - 1);
         } else {
           // Pausa antes de recomeçar
           setTimeout(() => {
             setPhase('welcome');
             setCurrentIndex(0);
-            setDisplayText("");
-          }, 3000);
+          }, 500);
         }
       }
     }, 100);
