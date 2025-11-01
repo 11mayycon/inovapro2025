@@ -8,8 +8,8 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Lock, Mail, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import bgImage from '@/assets/posto-rodoil-bg.jpg';
 import logoImage from '@/assets/rodoil-logo.png';
+import { BackgroundSlider } from '@/components/BackgroundSlider';
 
 export default function Login() {
   const [employeeData, setEmployeeData] = useState({ cpf: '' });
@@ -66,17 +66,9 @@ export default function Login() {
 
 
   return (
-    <div 
-      className="min-h-screen flex items-center justify-center p-4 relative"
-      style={{
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }}
-    >
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-      <Card className="w-full max-w-md p-8 space-y-6 relative z-10 shadow-2xl">
+    <div className="min-h-screen flex items-center justify-center p-4 relative">
+      <BackgroundSlider />
+      <Card className="w-full max-w-md p-8 space-y-6 relative z-10 shadow-2xl backdrop-blur-sm bg-card/95">
         <div className="text-center space-y-2">
           <div className="flex justify-center mb-4">
             <img src={logoImage} alt="RodOil Logo" className="w-20 h-20" />

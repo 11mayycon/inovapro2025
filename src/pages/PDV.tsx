@@ -14,7 +14,7 @@ import { Search, Plus, Minus, Trash2, ShoppingCart, DollarSign, Printer, Clock, 
 import { useNavigate } from 'react-router-dom';
 import { BarcodeScanner } from '@/components/BarcodeScanner';
 import { startOfDay, endOfDay } from 'date-fns';
-import bgImage from '@/assets/posto-rodoil-bg.jpg';
+import { BackgroundSlider } from '@/components/BackgroundSlider';
 
 interface Product {
   id: string;
@@ -677,18 +677,8 @@ export default function PDV() {
   };
 
   return (
-    <div 
-      className="relative min-h-screen"
-      style={{
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed'
-      }}
-    >
-      {/* Overlay escuro */}
-      <div className="fixed inset-0 bg-black/50 -z-10"></div>
+    <div className="relative min-h-screen">
+      <BackgroundSlider />
 
       <div className="relative z-0 container mx-auto px-4 py-6">
         {/* Card de Resumo de Vendas do Turno */}
