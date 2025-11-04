@@ -18,6 +18,7 @@ import Desperdicio from "./pages/Desperdicio";
 import VendaTotal from "./pages/VendaTotal";
 import Usuarios from "./pages/Usuarios";
 import ImportarProdutos from "./pages/ImportarProdutos";
+import ImportarProdutosSQL from "./pages/ImportarProdutosSQL";
 import ConsultaProdutos from "./pages/ConsultaProdutos";
 import ProdutosRisco from "./pages/ProdutosRisco";
 import FinalizarTurno from "./pages/FinalizarTurno";
@@ -146,6 +147,14 @@ const App = () => (
               element={
                 <ProtectedRoute adminOnly>
                   <ImportarProdutos />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/importar-sql"
+              element={
+                <ProtectedRoute adminOnly>
+                  <ImportarProdutosSQL />
                 </ProtectedRoute>
               }
             />
