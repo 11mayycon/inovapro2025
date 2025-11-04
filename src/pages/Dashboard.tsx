@@ -182,6 +182,22 @@ export default function Dashboard() {
       show: isAdmin,
     },
     {
+      title: 'Importar CSV',
+      description: 'Importar produtos do CSV',
+      icon: Upload,
+      path: '/importar',
+      color: 'from-pink-500 to-pink-600',
+      show: isAdmin,
+    },
+    {
+      title: 'Importar SQL',
+      description: 'Importar produtos filtrados do SQL',
+      icon: FileText,
+      path: '/importar-sql',
+      color: 'from-rose-500 to-rose-600',
+      show: isAdmin,
+    },
+    {
       title: 'Configurações',
       description: 'Alterar senha e email',
       icon: Settings,
