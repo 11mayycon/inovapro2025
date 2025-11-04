@@ -18,11 +18,13 @@ export default function ImportarProdutosSQL() {
   const parseSQL = (sqlContent: string) => {
     const products = [];
     
-    // Regex para extrair valores do INSERT
-    const valueRegex = /\('([^']*)',\s*('([^']*)'|null),\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*('([^']*)'|null)/g;
+    // Regex atualizada para capturar mais campos
+    const valueRegex = /\('([^']*)',\s*('([^']*)'|null),\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*('([^']*)'|null),/g;
     
     let match;
     let parsed = 0;
+    
+    console.log('Iniciando parse do arquivo SQL...');
     
     while ((match = valueRegex.exec(sqlContent)) !== null) {
       parsed++;
@@ -48,8 +50,14 @@ export default function ImportarProdutosSQL() {
           descricao: descricao
         });
       }
+      
+      // Log a cada 100 produtos parseados
+      if (parsed % 100 === 0) {
+        console.log(`Parseado ${parsed} produtos, filtrados ${products.length}...`);
+      }
     }
     
+    console.log(`Parse concluído: ${parsed} total, ${products.length} filtrados`);
     return { products, parsed };
   };
 
@@ -95,42 +103,73 @@ export default function ImportarProdutosSQL() {
       console.log(`Total parseado: ${parsed}`);
       console.log(`Com código de barras ou [codigo]: ${products.length}`);
 
-      // Inserir produtos em lotes de 50
+      // Remover duplicatas por codigo_barras
+      const uniqueProducts = products.reduce((acc, product) => {
+        const key = product.codigo_barras || product.nome;
+        if (!acc.some(p => (p.codigo_barras && p.codigo_barras === key) || p.nome === key)) {
+          acc.push(product);
+        }
+        return acc;
+      }, [] as any[]);
+
+      console.log(`Produtos únicos após remoção de duplicatas: ${uniqueProducts.length}`);
+
+      // Inserir produtos em lotes de 50 usando upsert
       const batchSize = 50;
       let totalImported = 0;
+      let totalUpdated = 0;
       let errors = 0;
 
-      for (let i = 0; i < products.length; i += batchSize) {
-        const batch = products.slice(i, i + batchSize);
+      for (let i = 0; i < uniqueProducts.length; i += batchSize) {
+        const batch = uniqueProducts.slice(i, i + batchSize);
         
-        const { error } = await supabase
+        console.log(`Processando lote ${Math.floor(i / batchSize) + 1} de ${Math.ceil(uniqueProducts.length / batchSize)}`);
+        
+        // Usar upsert para evitar conflitos com codigo_barras único
+        const { data, error } = await supabase
           .from('products')
-          .insert(batch);
+          .upsert(batch, { 
+            onConflict: 'codigo_barras',
+            ignoreDuplicates: false 
+          })
+          .select();
 
         if (error) {
-          console.error('Erro ao importar lote:', error);
+          console.error(`❌ Erro no lote ${Math.floor(i / batchSize) + 1}:`, error);
           errors += batch.length;
           
           // Tentar importar individualmente em caso de erro
+          console.log('Tentando importação individual...');
           for (const product of batch) {
             const { error: individualError } = await supabase
               .from('products')
-              .insert([product]);
+              .upsert([product], { 
+                onConflict: 'codigo_barras',
+                ignoreDuplicates: false 
+              });
             
             if (!individualError) {
               totalImported++;
               setImported(totalImported);
+            } else {
+              console.error('Erro individual:', product.nome, individualError.message);
             }
           }
         } else {
-          totalImported += batch.length;
+          const count = data?.length || batch.length;
+          totalImported += count;
           setImported(totalImported);
+          console.log(`✅ Lote ${Math.floor(i / batchSize) + 1}: ${count} produtos processados`);
         }
       }
 
+      console.log(`\n📊 Resumo da importação:`);
+      console.log(`   Total processado: ${totalImported}`);
+      console.log(`   Erros: ${errors}`);
+
       toast({
         title: 'Importação concluída!',
-        description: `${totalImported} produtos importados com sucesso${errors > 0 ? `, ${errors} erros` : ''}.`,
+        description: `${totalImported} produtos processados${errors > 0 ? `, ${errors} com erro` : ''}.`,
       });
 
     } catch (error: any) {
