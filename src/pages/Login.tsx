@@ -2,12 +2,16 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Lock, Mail, CreditCard } from 'lucide-react';
+import { Lock, Mail, CreditCard, TestTube } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import logoImage from '@/assets/rodoil-logo.png';
 import { BackgroundSlider } from '@/components/BackgroundSlider';
 import { WelcomeAnimation } from '@/components/WelcomeAnimation';
+import { TestAccountDialog } from '@/components/TestAccountDialog';
+import { generateValidCPF, formatCPF } from '@/utils/cpfGenerator';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Login() {
   const [employeeData, setEmployeeData] = useState({ cpf: '' });
@@ -16,6 +20,9 @@ export default function Login() {
   const [activeTab, setActiveTab] = useState('employee');
   const [showWelcome, setShowWelcome] = useState(false);
   const [userName, setUserName] = useState('');
+  const [showTestDialog, setShowTestDialog] = useState(false);
+  const [testCpf, setTestCpf] = useState('');
+  const [testLoading, setTestLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -53,6 +60,65 @@ export default function Login() {
       setTimeout(() => {
         navigate('/dashboard');
       }, 3000);
+    }
+  };
+
+  const handleCreateTestAccount = () => {
+    const cpf = generateValidCPF();
+    setTestCpf(cpf);
+    setShowTestDialog(true);
+  };
+
+  const handleTestAccountSubmit = async (name: string, whatsapp: string) => {
+    setTestLoading(true);
+    
+    try {
+      // Calcula o tempo de expiração (10 minutos a partir de agora)
+      const expiresAt = new Date();
+      expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+
+      // Cria a conta teste no banco
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert([{
+          name,
+          email: `teste_${testCpf}@temp.com`,
+          cpf: testCpf,
+          whatsapp_number: whatsapp,
+          role: 'employee' as 'employee',
+          cargo: 'Usuário Teste',
+          blocked: false,
+          password_hash: '$2b$10$temp',
+          expires_at: expiresAt.toISOString()
+        }]);
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      toast({
+        title: 'Conta teste criada!',
+        description: `CPF: ${formatCPF(testCpf)}\nExpira em 10 minutos.`,
+      });
+
+      // Faz login automático
+      setShowTestDialog(false);
+      setEmployeeData({ cpf: testCpf });
+      
+      // Aguarda um momento e faz o login
+      setTimeout(() => {
+        handleEmployeeLogin();
+      }, 500);
+
+    } catch (error: any) {
+      console.error('Erro ao criar conta teste:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao criar conta teste',
+        description: error.message || 'Tente novamente.',
+      });
+    } finally {
+      setTestLoading(false);
     }
   };
 
@@ -179,8 +245,26 @@ export default function Login() {
               </form>
             </TabsContent>
           </Tabs>
+
+          <div className="mt-4">
+            <Button
+              onClick={handleCreateTestAccount}
+              variant="outline"
+              className="w-full bg-white/10 hover:bg-white/20 text-white border-white/30"
+            >
+              <TestTube className="mr-2 h-4 w-4" />
+              Gerar Conta Teste (10 min)
+            </Button>
+          </div>
         </div>
       </div>
+
+      <TestAccountDialog
+        open={showTestDialog}
+        onClose={() => setShowTestDialog(false)}
+        onSubmit={handleTestAccountSubmit}
+        loading={testLoading}
+      />
     </div>
   );
 }

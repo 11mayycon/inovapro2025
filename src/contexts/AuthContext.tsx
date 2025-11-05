@@ -66,6 +66,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const userData = users[0] as any;
 
+      // Verificar se a conta expirou
+      if (userData.expires_at) {
+        const expiresAt = new Date(userData.expires_at);
+        const now = new Date();
+        
+        if (now > expiresAt) {
+          // Deletar conta expirada
+          await supabase.from('users').delete().eq('id', userData.id);
+          return { error: 'Esta conta teste expirou e foi removida.' };
+        }
+      }
+
       // Para admin, validar senha com bcrypt
       // Para funcionário, login apenas com CPF (sem senha)
       if (isAdmin) {
