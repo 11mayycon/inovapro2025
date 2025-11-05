@@ -306,31 +306,55 @@ function BenefitsSection() {
       icon: Zap,
       title: 'Vendas sem fila',
       description: 'Fluxo simples, rápido e sem travar. Atendimento ágil que mantém seus clientes satisfeitos.',
+      gradient: 'from-yellow-400 to-orange-500',
+      iconBg: 'from-yellow-500/30 to-orange-500/30',
+      iconColor: 'text-yellow-400',
+      shadow: 'shadow-yellow-500/30',
     },
     {
       icon: Package,
       title: 'Estoque preciso',
       description: 'Entradas, saídas e alertas de reposição automáticos. Nunca perca vendas por falta de produto.',
+      gradient: 'from-blue-400 to-cyan-500',
+      iconBg: 'from-blue-500/30 to-cyan-500/30',
+      iconColor: 'text-blue-400',
+      shadow: 'shadow-blue-500/30',
     },
     {
       icon: BarChart3,
       title: 'Relatórios em 1 clique',
       description: 'PDF e Excel automáticos com todos os dados que você precisa para tomar decisões.',
+      gradient: 'from-purple-400 to-pink-500',
+      iconBg: 'from-purple-500/30 to-pink-500/30',
+      iconColor: 'text-purple-400',
+      shadow: 'shadow-purple-500/30',
     },
     {
       icon: Clock,
       title: 'Equipe sob controle',
       description: 'Ponto digital e acompanhamento de produtividade em tempo real.',
+      gradient: 'from-green-400 to-emerald-500',
+      iconBg: 'from-green-500/30 to-emerald-500/30',
+      iconColor: 'text-green-400',
+      shadow: 'shadow-green-500/30',
     },
     {
       icon: MessageSquare,
       title: 'WhatsApp inteligente',
       description: 'IA responde clientes 24/7 e transfere ao humano quando necessário.',
+      gradient: 'from-cyan-400 to-teal-500',
+      iconBg: 'from-cyan-500/30 to-teal-500/30',
+      iconColor: 'text-cyan-400',
+      shadow: 'shadow-cyan-500/30',
     },
     {
       icon: TrendingUp,
       title: 'Multi-loja/escala',
       description: 'Preparado para crescer. Gerencie múltiplas unidades de forma centralizada.',
+      gradient: 'from-pink-400 to-rose-500',
+      iconBg: 'from-pink-500/30 to-rose-500/30',
+      iconColor: 'text-pink-400',
+      shadow: 'shadow-pink-500/30',
     },
   ];
 
@@ -365,15 +389,17 @@ function BenefitsSection() {
               whileHover={{ y: -8, scale: 1.02 }}
               className="group"
             >
-              <Card className="h-full bg-slate-900/50 backdrop-blur-sm border-purple-500/20 hover:border-purple-400/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/20">
+              <Card className={`h-full bg-slate-900/70 backdrop-blur-sm border-2 border-slate-700/50 hover:border-slate-600 transition-all duration-300 hover:shadow-2xl hover:${benefit.shadow}`}>
                 <CardHeader>
-                  <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition">
-                    <benefit.icon className="h-7 w-7 text-purple-400" />
+                  <div className={`h-16 w-16 rounded-2xl bg-gradient-to-br ${benefit.iconBg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg ${benefit.shadow}`}>
+                    <benefit.icon className={`h-8 w-8 ${benefit.iconColor}`} />
                   </div>
-                  <CardTitle className="text-2xl">{benefit.title}</CardTitle>
+                  <CardTitle className={`text-2xl bg-gradient-to-r ${benefit.gradient} bg-clip-text text-transparent`}>
+                    {benefit.title}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription className="text-slate-400 text-base">{benefit.description}</CardDescription>
+                  <CardDescription className="text-slate-300 text-base leading-relaxed">{benefit.description}</CardDescription>
                 </CardContent>
               </Card>
             </motion.div>

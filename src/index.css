@@ -71,13 +71,19 @@ All colors MUST be HSL.
     --transition-base: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* Neon colors for landing page */
-    --neon-purple: 262 83% 58%;
-    --neon-blue: 217 91% 60%;
-    --neon-pink: 330 81% 60%;
-    --glow-purple: 262 83% 58% / 0.3;
-    --glow-blue: 217 91% 60% / 0.3;
-    --glow-pink: 330 81% 60% / 0.3;
+    /* Neon colors for landing page - MORE VIBRANT */
+    --neon-purple: 270 95% 70%;
+    --neon-blue: 217 100% 65%;
+    --neon-pink: 330 90% 70%;
+    --neon-cyan: 180 100% 60%;
+    --neon-green: 142 90% 55%;
+    --neon-orange: 25 100% 65%;
+    --glow-purple: 270 95% 70% / 0.4;
+    --glow-blue: 217 100% 65% / 0.4;
+    --glow-pink: 330 90% 70% / 0.4;
+    --glow-cyan: 180 100% 60% / 0.4;
+    --glow-green: 142 90% 55% / 0.4;
+    --glow-orange: 25 100% 65% / 0.4;
   }
 }
 
