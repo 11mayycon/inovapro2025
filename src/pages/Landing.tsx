@@ -74,9 +74,6 @@ export default function Landing() {
       {/* How It Works */}
       <HowItWorksSection />
 
-      {/* Demo Access */}
-      <DemoSection />
-
       {/* Features */}
       <FeaturesSection />
 
@@ -141,7 +138,7 @@ function Navbar({ isScrolled, isMenuOpen, setIsMenuOpen, scrollToSection }: any)
             <Button 
               variant="ghost" 
               asChild 
-              className="border-2 border-purple-400 text-purple-300 hover:bg-purple-500/20 hover:text-purple-200 hover:border-purple-300"
+              className="border-2 border-cyan-400 bg-transparent text-cyan-300 hover:bg-cyan-500/20 hover:text-cyan-200 hover:border-cyan-300"
             >
               <a href={LINK_TESTE} target="_blank" rel="noopener noreferrer">
                 Testar Agora
@@ -189,7 +186,7 @@ function Navbar({ isScrolled, isMenuOpen, setIsMenuOpen, scrollToSection }: any)
               <Button 
                 variant="outline" 
                 asChild 
-                className="w-full border-2 border-purple-400 text-purple-300 hover:bg-purple-500/20 hover:text-purple-200"
+                className="w-full border-2 border-cyan-400 bg-transparent text-cyan-300 hover:bg-cyan-500/20 hover:text-cyan-200"
               >
                 <a href={LINK_TESTE} target="_blank" rel="noopener noreferrer">
                   Testar Agora
@@ -253,7 +250,7 @@ function HeroSection({ opacity }: any) {
               size="lg"
               variant="outline"
               asChild
-              className="border-2 border-purple-400 text-purple-200 hover:border-purple-300 hover:bg-purple-500/20 hover:text-white text-lg px-8 py-6"
+              className="border-2 border-pink-400 bg-transparent text-pink-300 hover:border-pink-300 hover:bg-pink-500/20 hover:text-pink-200 text-lg px-8 py-6"
             >
               <a href={LINK_CHECKOUT} target="_blank" rel="noopener noreferrer">
                 Assinar com Desconto
@@ -499,79 +496,12 @@ function HowItWorksSection() {
             size="lg"
             variant="outline"
             asChild
-            className="border-2 border-purple-400 text-purple-200 hover:border-purple-300 hover:bg-purple-500/20 hover:text-white"
+            className="border-2 border-pink-400 bg-transparent text-pink-300 hover:border-pink-300 hover:bg-pink-500/20 hover:text-pink-200"
           >
             <a href={LINK_CHECKOUT} target="_blank" rel="noopener noreferrer">
               Assinar com Desconto
             </a>
           </Button>
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
-function DemoSection() {
-  const [copied, setCopied] = useState<string | null>(null);
-
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(label);
-    toast.success(`${label} copiado!`);
-    setTimeout(() => setCopied(null), 2000);
-  };
-
-  const demoData = [
-    { label: 'Link', value: LINK_TESTE, copyValue: LINK_TESTE },
-    { label: 'Email', value: 'teste@inovapro.cloud', copyValue: 'teste@inovapro.cloud' },
-    { label: 'Senha', value: '1285042', copyValue: '1285042' },
-  ];
-
-  return (
-    <section className="py-24 px-4">
-      <div className="container mx-auto max-w-4xl">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-        >
-          <Card className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 backdrop-blur-xl border-purple-500/30 shadow-2xl shadow-purple-500/20">
-            <CardHeader className="text-center">
-              <CardTitle className="text-3xl md:text-4xl mb-4">
-                <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  Acesso de Teste
-                </span>
-              </CardTitle>
-              <CardDescription className="text-lg text-slate-300">
-                Experimente agora mesmo sem precisar instalar nada. Basta abrir no navegador!
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {demoData.map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center justify-between p-4 rounded-xl bg-slate-900/50 border border-purple-500/20"
-                >
-                  <div className="flex-1">
-                    <p className="text-sm text-slate-400 mb-1">{item.label}</p>
-                    <p className="text-white font-mono break-all">{item.value}</p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard(item.copyValue, item.label)}
-                    className="ml-4 text-purple-300 hover:bg-purple-500/20 hover:text-purple-200"
-                  >
-                    {copied === item.label ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  </Button>
-                </div>
-              ))}
-              <p className="text-sm text-slate-400 text-center pt-4">
-                <CheckCircle2 className="inline h-4 w-4 mr-2 text-green-400" />
-                Sem instalação, abre direto no navegador
-              </p>
-            </CardContent>
-          </Card>
         </motion.div>
       </div>
     </section>
@@ -948,7 +878,7 @@ function FinalCTASection() {
               size="lg"
               variant="outline"
               asChild
-              className="border-2 border-purple-400 text-purple-200 hover:border-purple-300 hover:bg-purple-500/20 hover:text-white text-lg px-8 py-6"
+              className="border-2 border-pink-400 bg-transparent text-pink-300 hover:border-pink-300 hover:bg-pink-500/20 hover:text-pink-200 text-lg px-8 py-6"
             >
               <a href={LINK_CHECKOUT} target="_blank" rel="noopener noreferrer">
                 Assinar com 50% OFF
