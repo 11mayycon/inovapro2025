@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Lock, Mail, CreditCard, TestTube } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import logoImage from '@/assets/rodoil-logo.png';
+import logoImage from '@/assets/inovapro-logo.png';
 import { BackgroundSlider } from '@/components/BackgroundSlider';
 import { WelcomeAnimation } from '@/components/WelcomeAnimation';
 import { TestAccountDialog } from '@/components/TestAccountDialog';
