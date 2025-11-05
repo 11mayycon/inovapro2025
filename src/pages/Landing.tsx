@@ -138,14 +138,18 @@ function Navbar({ isScrolled, isMenuOpen, setIsMenuOpen, scrollToSection }: any)
           </div>
 
           <div className="hidden lg:flex items-center gap-3">
-            <Button variant="ghost" asChild className="border border-purple-500/50 hover:border-purple-400">
+            <Button 
+              variant="ghost" 
+              asChild 
+              className="border-2 border-purple-400 text-purple-300 hover:bg-purple-500/20 hover:text-purple-200 hover:border-purple-300"
+            >
               <a href={LINK_TESTE} target="_blank" rel="noopener noreferrer">
                 Testar Agora
               </a>
             </Button>
             <Button
               asChild
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-lg shadow-purple-500/50"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg shadow-purple-500/50"
             >
               <a href={LINK_CHECKOUT} target="_blank" rel="noopener noreferrer">
                 Assinar
@@ -182,12 +186,19 @@ function Navbar({ isScrolled, isMenuOpen, setIsMenuOpen, scrollToSection }: any)
               FAQ
             </button>
             <div className="space-y-2 pt-4">
-              <Button variant="outline" asChild className="w-full">
+              <Button 
+                variant="outline" 
+                asChild 
+                className="w-full border-2 border-purple-400 text-purple-300 hover:bg-purple-500/20 hover:text-purple-200"
+              >
                 <a href={LINK_TESTE} target="_blank" rel="noopener noreferrer">
                   Testar Agora
                 </a>
               </Button>
-              <Button asChild className="w-full bg-gradient-to-r from-purple-600 to-pink-600">
+              <Button 
+                asChild 
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500"
+              >
                 <a href={LINK_CHECKOUT} target="_blank" rel="noopener noreferrer">
                   Assinar
                 </a>
@@ -231,7 +242,7 @@ function HeroSection({ opacity }: any) {
             <Button
               size="lg"
               asChild
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-2xl shadow-purple-500/50 text-lg px-8 py-6 group"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-2xl shadow-purple-500/50 text-lg px-8 py-6 group"
             >
               <a href={LINK_TESTE} target="_blank" rel="noopener noreferrer">
                 Testar Agora
@@ -242,7 +253,7 @@ function HeroSection({ opacity }: any) {
               size="lg"
               variant="outline"
               asChild
-              className="border-2 border-purple-500/50 hover:border-purple-400 hover:bg-purple-500/10 text-lg px-8 py-6"
+              className="border-2 border-purple-400 text-purple-200 hover:border-purple-300 hover:bg-purple-500/20 hover:text-white text-lg px-8 py-6"
             >
               <a href={LINK_CHECKOUT} target="_blank" rel="noopener noreferrer">
                 Assinar com Desconto
@@ -478,7 +489,7 @@ function HowItWorksSection() {
           <Button
             size="lg"
             asChild
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-xl shadow-purple-500/50"
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-xl shadow-purple-500/50"
           >
             <a href={LINK_TESTE} target="_blank" rel="noopener noreferrer">
               Testar Agora
@@ -488,7 +499,7 @@ function HowItWorksSection() {
             size="lg"
             variant="outline"
             asChild
-            className="border-2 border-purple-500/50 hover:border-purple-400 hover:bg-purple-500/10"
+            className="border-2 border-purple-400 text-purple-200 hover:border-purple-300 hover:bg-purple-500/20 hover:text-white"
           >
             <a href={LINK_CHECKOUT} target="_blank" rel="noopener noreferrer">
               Assinar com Desconto
@@ -549,7 +560,7 @@ function DemoSection() {
                     variant="ghost"
                     size="sm"
                     onClick={() => copyToClipboard(item.copyValue, item.label)}
-                    className="ml-4 hover:bg-purple-500/20"
+                    className="ml-4 text-purple-300 hover:bg-purple-500/20 hover:text-purple-200"
                   >
                     {copied === item.label ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </Button>
@@ -741,7 +752,7 @@ function PricingSection() {
               <Button
                 size="lg"
                 asChild
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-xl shadow-purple-500/50 text-lg py-6"
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-xl shadow-purple-500/50 text-lg py-6"
               >
                 <a href={LINK_CHECKOUT} target="_blank" rel="noopener noreferrer">
                   Assinar com Desconto
@@ -927,7 +938,7 @@ function FinalCTASection() {
             <Button
               size="lg"
               asChild
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-2xl shadow-purple-500/50 text-lg px-8 py-6"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-2xl shadow-purple-500/50 text-lg px-8 py-6"
             >
               <a href={LINK_TESTE} target="_blank" rel="noopener noreferrer">
                 Testar Agora Grátis
@@ -937,7 +948,7 @@ function FinalCTASection() {
               size="lg"
               variant="outline"
               asChild
-              className="border-2 border-purple-500/50 hover:border-purple-400 hover:bg-purple-500/10 text-lg px-8 py-6"
+              className="border-2 border-purple-400 text-purple-200 hover:border-purple-300 hover:bg-purple-500/20 hover:text-white text-lg px-8 py-6"
             >
               <a href={LINK_CHECKOUT} target="_blank" rel="noopener noreferrer">
                 Assinar com 50% OFF
