@@ -1,39 +1,16 @@
-import { useEffect, useState } from 'react';
-import useEmblaCarousel from 'embla-carousel-react';
-import Autoplay from 'embla-carousel-autoplay';
-
-import loja1 from '@/assets/loja-1.jpg';
-import loja2 from '@/assets/loja-2.jpg';
-import loja3 from '@/assets/loja-3.jpg';
-import loja4 from '@/assets/loja-4.jpg';
-import loja5 from '@/assets/loja-5.jpg';
-
-const images = [loja1, loja2, loja3, loja4, loja5];
+import supermercadoBg from '@/assets/supermercado-bg.jpg';
 
 export function BackgroundSlider() {
-  const [emblaRef] = useEmblaCarousel({ loop: true }, [
-    Autoplay({ delay: 5000, stopOnInteraction: false })
-  ]);
-
   return (
     <div className="fixed inset-0 -z-20">
-      <div className="embla overflow-hidden h-full" ref={emblaRef}>
-        <div className="embla__container flex h-full">
-          {images.map((image, index) => (
-            <div
-              key={index}
-              className="embla__slide flex-[0_0_100%] min-w-0 relative"
-            >
-              <div
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                style={{
-                  backgroundImage: `url(${image})`,
-                }}
-              />
-              {/* Overlay escuro */}
-              <div className="absolute inset-0 bg-black/60" />
-            </div>
-          ))}
+      <div className="h-full w-full">
+        <div className="h-full w-full relative">
+          <img
+            src={supermercadoBg}
+            alt="PDV-INOVAPRO"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50" />
         </div>
       </div>
     </div>

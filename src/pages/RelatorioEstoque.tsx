@@ -61,7 +61,7 @@ export default function RelatorioEstoque() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório de Estoque - caminho certo</title>
+    <title>Relatório de Estoque - PDV-INOVAPRO</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -123,7 +123,7 @@ export default function RelatorioEstoque() {
 </head>
 <body>
     <div class="header">
-        <div class="company-name">caminho certo</div>
+        <div class="company-name">PDV-INOVAPRO</div>
         <div class="report-title">Relatório de Estoque</div>
         <div class="report-date">Gerado em: ${formattedDate}</div>
     </div>
@@ -156,7 +156,7 @@ export default function RelatorioEstoque() {
     </div>
 
     <div class="footer">
-        Relatório gerado pelo Sistema de Gestão caminho certo
+        Relatório gerado pelo Sistema de Gestão PDV-INOVAPRO
     </div>
 </body>
 </html>`;

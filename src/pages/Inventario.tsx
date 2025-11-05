@@ -647,12 +647,12 @@ export default function Inventario() {
     // Título principal - centralizado
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text('Inventario Conveniencia Caminho Certo', 105, 28, { align: 'center' });
+    doc.text('Inventário PDV-INOVAPRO', 105, 28, { align: 'center' });
     
     // Subtítulo
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text('Relatorio de Inventario - InovaPro Technology', 105, 35, { align: 'center' });
+    doc.text('Relatório de Inventário - PDV-INOVAPRO Technology', 105, 35, { align: 'center' });
 
     let yPos = 50;
 
@@ -787,12 +787,12 @@ export default function Inventario() {
 
       // Nome do arquivo seguindo o padrão solicitado
       const dataFormatada = new Date().toLocaleDateString('pt-BR').split('/').reverse().join('-');
-      const filename = `inventario_conveniencia_caminho_certo_${dataFormatada}.pdf`;
+      const filename = `inventario_pdv_inovapro_${dataFormatada}.pdf`;
       doc.save(filename);
 
       toast({ 
         title: 'PDF Gerado com Sucesso', 
-        description: 'Inventario Conveniencia Caminho Certo salvo' 
+        description: 'Inventário PDV-INOVAPRO salvo' 
       });
     } catch (error: any) {
       console.error('Erro ao gerar PDF:', error);

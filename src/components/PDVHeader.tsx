@@ -24,7 +24,7 @@ export function PDVHeader() {
             </div>
             <div>
               <h1 className="text-2xl font-bold neon-title uppercase">
-                {'CAMINHO CERTO'.split('').map((char, i) => (
+                {'PDV-INOVAPRO'.split('').map((char, i) => (
                   <span
                     key={i}
                     className="inline-block letter-bounce"

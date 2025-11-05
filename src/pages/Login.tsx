@@ -171,7 +171,7 @@ export default function Login() {
           <div className="flex justify-center">
             <img src={logoImage} alt="RodOil Logo" className="w-24 h-24" />
           </div>
-          <h1 className="text-4xl font-bold text-white">CAMINHO CERTO</h1>
+          <h1 className="text-4xl font-bold text-white">PDV-INOVAPRO</h1>
           <WelcomeAnimation />
         </div>
 

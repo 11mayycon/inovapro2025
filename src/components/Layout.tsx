@@ -41,7 +41,7 @@ export function Layout({ children, title, showBack = false }: LayoutProps) {
               </div>
               <div>
                 <h1 className="text-xl md:text-2xl font-bold neon-title uppercase">
-                  {(title || 'CAMINHO CERTO').split('').map((char, i) => (
+                  {(title || 'PDV-INOVAPRO').split('').map((char, i) => (
                     <span
                       key={i}
                       className="inline-block letter-bounce"
