@@ -627,8 +627,11 @@ function PricingSection() {
   ];
 
   return (
-    <section id="planos" className="py-24 px-4">
-      <div className="container mx-auto max-w-4xl">
+    <section id="planos" className="py-24 px-4 relative overflow-hidden">
+      {/* Animated background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-indigo-950/30 to-slate-950" />
+      
+      <div className="container mx-auto max-w-4xl relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -640,60 +643,128 @@ function PricingSection() {
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, scale: 0.9, y: 30 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
           viewport={{ once: true }}
+          transition={{ 
+            duration: 0.6,
+            ease: [0.19, 1, 0.22, 1]
+          }}
+          whileHover={{ 
+            y: -5,
+            transition: { duration: 0.3 }
+          }}
+          className="relative card-float"
         >
-          <Card className="bg-gradient-to-br from-blue-900/60 to-cyan-900/50 backdrop-blur-xl border-2 border-blue-400/60 shadow-2xl shadow-blue-400/50 relative before:absolute before:inset-0 before:rounded-2xl before:p-[2px] before:bg-gradient-to-br before:from-blue-400/40 before:via-cyan-400/40 before:to-blue-400/40 before:-z-10 before:blur-xl">
-            <CardHeader className="text-center pb-8">
-              <div className="mb-4">
-                <Badge className="bg-green-500/20 text-green-300 border-green-500/50 text-sm px-4 py-2">
+          {/* Outer glow effect */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-blue-500 to-pink-600 rounded-3xl blur-xl opacity-30 neon-glow-border" />
+          
+          {/* Main card */}
+          <Card className="relative bg-gradient-to-br from-slate-900/90 via-indigo-950/50 to-slate-900/90 backdrop-blur-xl border-2 border-purple-500/40 rounded-3xl overflow-hidden">
+            {/* Shimmer overlay */}
+            <div className="absolute inset-0 shimmer-effect pointer-events-none" />
+            
+            <CardHeader className="text-center pb-8 pt-10 relative">
+              {/* Badge */}
+              <motion.div
+                initial={{ scale: 0 }}
+                whileInView={{ scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                className="mb-6"
+              >
+                <Badge className="bg-gradient-to-r from-green-500/30 to-emerald-500/30 text-green-300 border-green-400/50 text-sm px-4 py-2 backdrop-blur-sm">
+                  <Sparkles className="inline mr-2 h-4 w-4" />
                   50% OFF no 1º mês
                 </Badge>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-center gap-4">
-                  <span className="text-3xl line-through text-slate-500">R$ 300,00</span>
-                  <span className="text-6xl font-bold text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text">
-                    R$ 149,60
-                  </span>
+              </motion.div>
+
+              {/* Pricing */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+                className="space-y-3"
+              >
+                <div className="flex items-center justify-center gap-6">
+                  <span className="text-3xl line-through text-slate-500 opacity-60">R$ 300,00</span>
+                  <div className="relative">
+                    <span className="text-7xl font-black text-transparent bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text price-pulse">
+                      R$ 149,60
+                    </span>
+                  </div>
                 </div>
-                <p className="text-slate-400">no primeiro mês</p>
+                <p className="text-slate-300 text-lg">no primeiro mês</p>
                 <p className="text-sm text-slate-500">depois R$ 300/mês</p>
-              </div>
+              </motion.div>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <ul className="space-y-3">
+
+            <CardContent className="space-y-8 px-8 pb-10">
+              {/* Features list */}
+              <ul className="space-y-4">
                 {features.map((feature, idx) => (
                   <motion.li
                     key={idx}
-                    initial={{ opacity: 0, x: -20 }}
+                    initial={{ opacity: 0, x: -30 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="flex items-center gap-3"
+                    transition={{ 
+                      delay: 0.4 + idx * 0.05,
+                      duration: 0.5,
+                      ease: "easeOut"
+                    }}
+                    whileHover={{ x: 5 }}
+                    className="flex items-center gap-4 group"
                   >
-                    <CheckCircle2 className="h-5 w-5 text-green-400 flex-shrink-0" />
-                    <span className="text-slate-200">{feature}</span>
+                    <motion.div
+                      animate={{ 
+                        scale: [1, 1.1, 1],
+                      }}
+                      transition={{ 
+                        duration: 2,
+                        repeat: Infinity,
+                        delay: idx * 0.2
+                      }}
+                    >
+                      <CheckCircle2 className="h-6 w-6 text-green-400 flex-shrink-0 drop-shadow-[0_0_8px_rgba(74,222,128,0.6)]" />
+                    </motion.div>
+                    <span className="text-slate-100 text-lg group-hover:text-white transition-colors">
+                      {feature}
+                    </span>
                   </motion.li>
                 ))}
               </ul>
 
-              <Button
-                size="lg"
-                asChild
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-xl shadow-purple-500/50 text-lg py-6"
+              {/* CTA Button */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.8 }}
               >
-                <a href={LINK_CHECKOUT} target="_blank" rel="noopener noreferrer">
-                  Assinar com Desconto
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </a>
-              </Button>
+                <Button
+                  size="lg"
+                  asChild
+                  className="w-full relative overflow-hidden bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-500 hover:via-pink-500 hover:to-blue-500 text-white shadow-2xl shadow-purple-500/50 text-lg py-7 rounded-2xl border-2 border-purple-400/30 group transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_60px_rgba(168,85,247,0.6)]"
+                >
+                  <a href={LINK_CHECKOUT} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                    <span className="font-bold">Assinar com Desconto</span>
+                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </a>
+                </Button>
+              </motion.div>
 
-              <p className="text-center text-sm text-slate-400">
-                <Shield className="inline h-4 w-4 mr-2" />
-                Satisfação garantida
-              </p>
+              {/* Footer text */}
+              <motion.p
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 0.8 }}
+                viewport={{ once: true }}
+                transition={{ delay: 1 }}
+                className="text-center text-sm text-slate-400 pt-4"
+              >
+                💜 Satisfação garantida — suporte humano + IA inteligente.
+              </motion.p>
             </CardContent>
           </Card>
         </motion.div>
