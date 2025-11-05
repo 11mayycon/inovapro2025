@@ -644,7 +644,7 @@ function PricingSection() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
         >
-          <Card className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 backdrop-blur-xl border-2 border-purple-500/50 shadow-2xl shadow-purple-500/30">
+          <Card className="bg-gradient-to-br from-blue-900/60 to-cyan-900/50 backdrop-blur-xl border-2 border-blue-400/60 shadow-2xl shadow-blue-400/50 relative before:absolute before:inset-0 before:rounded-2xl before:p-[2px] before:bg-gradient-to-br before:from-blue-400/40 before:via-cyan-400/40 before:to-blue-400/40 before:-z-10 before:blur-xl">
             <CardHeader className="text-center pb-8">
               <div className="mb-4">
                 <Badge className="bg-green-500/20 text-green-300 border-green-500/50 text-sm px-4 py-2">
