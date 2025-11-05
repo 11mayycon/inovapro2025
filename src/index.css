@@ -70,6 +70,14 @@ All colors MUST be HSL.
     /* Transitions */
     --transition-base: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Neon colors for landing page */
+    --neon-purple: 262 83% 58%;
+    --neon-blue: 217 91% 60%;
+    --neon-pink: 330 81% 60%;
+    --glow-purple: 262 83% 58% / 0.3;
+    --glow-blue: 217 91% 60% / 0.3;
+    --glow-pink: 330 81% 60% / 0.3;
   }
 }
 
