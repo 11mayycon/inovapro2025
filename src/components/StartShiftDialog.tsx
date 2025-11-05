@@ -64,49 +64,26 @@ export function StartShiftDialog({ onShiftStarted }: StartShiftDialogProps) {
         return;
       }
 
-      // Verificar se o ponto é de hoje
-      const pontoEntrada = new Date(pontoData[0].entrada);
-      const now = new Date();
+      // Ponto está aberto - verificar/criar turno ativo
+      // Não importa se é de hoje ou de dia anterior, mantém o turno aberto
+      const { data: shiftData } = await supabase
+        .from('active_shifts')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('start_time', { ascending: false })
+        .limit(1);
 
-      const pontoDate = new Date(pontoEntrada.getFullYear(), pontoEntrada.getMonth(), pontoEntrada.getDate());
-      const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-      // Se o ponto for de dia anterior, finalizar automaticamente
-      if (pontoDate < currentDate) {
-        // Registrar saída automática para o ponto do dia anterior
-        await supabase
-          .from('ponto')
-          .update({ saida: new Date(pontoDate.getTime() + 23 * 60 * 60 * 1000 + 59 * 60 * 1000).toISOString() })
-          .eq('id', pontoData[0].id);
-
-        // Limpar turno ativo
+      // Se não houver turno ativo, criar um baseado no ponto
+      if (!shiftData || shiftData.length === 0) {
         await supabase
           .from('active_shifts')
-          .delete()
-          .eq('user_id', user.id);
-
-        setOpen(true);
-      } else {
-        // Ponto de hoje está aberto - verificar/criar turno ativo
-        const { data: shiftData } = await supabase
-          .from('active_shifts')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('start_time', { ascending: false })
-          .limit(1);
-
-        // Se não houver turno ativo, criar um baseado no ponto
-        if (!shiftData || shiftData.length === 0) {
-          await supabase
-            .from('active_shifts')
-            .insert([{
-              user_id: user.id,
-              start_time: pontoData[0].entrada,
-            }]);
-        }
-
-        onShiftStarted();
+          .insert([{
+            user_id: user.id,
+            start_time: pontoData[0].entrada,
+          }]);
       }
+
+      onShiftStarted();
     } catch (error) {
       console.error('Error checking active shift:', error);
       setOpen(true);
