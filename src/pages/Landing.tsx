@@ -23,6 +23,7 @@ import {
   X,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 import logoImage from '@/assets/inovapro-logo.png';
 
 const LINK_TESTE = 'https://pdv.inovapro.cloud/';
@@ -241,10 +242,10 @@ function HeroSection({ opacity }: any) {
               asChild
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-2xl shadow-purple-500/50 text-lg px-8 py-6 group"
             >
-              <a href={LINK_TESTE} target="_blank" rel="noopener noreferrer">
+              <Link to="/login">
                 Testar Agora
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition" />
-              </a>
+              </Link>
             </Button>
             <Button
               size="lg"
