@@ -40,23 +40,15 @@ export function Layout({ children, title, showBack = false }: LayoutProps) {
                 <Package className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold neon-title uppercase">
-                  {(title || 'PDV-INOVAPRO').split('').map((char, i) => (
-                    <span
-                      key={i}
-                      className="inline-block letter-bounce"
-                      style={{ animationDelay: `${i * 0.1}s` }}
-                    >
-                      {char === ' ' ? '\u00A0' : char}
-                    </span>
-                  ))}
+                <h1 className="text-xl md:text-2xl font-bold text-white uppercase">
+                  {title || 'PDV-INOVAPRO'}
                 </h1>
                 <p className="text-xs md:text-sm text-blue-200">Sistema de Gestão</p>
               </div>
             </div>
             <div className="flex items-center gap-2 md:gap-4">
               <div className="text-right hidden sm:block">
-                <AnimatedUsername name={user?.name || 'Usuário'} />
+                <p className="text-sm font-medium text-white">{user?.name || 'Usuário'}</p>
                 <p className="text-xs text-blue-300">{user?.cargo}</p>
               </div>
               <Button 
