@@ -6,11 +6,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, DollarSign, Users, TrendingUp, FileText, Printer, AlertTriangle } from 'lucide-react';
+import { Clock, DollarSign, Users, TrendingUp, FileText, Printer, AlertTriangle, Download } from 'lucide-react';
 import { ClockOutDialog } from '@/components/ClockOutDialog';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const BOT_SERVER_URL = import.meta.env.VITE_BOT_SERVER_URL || 'http://localhost:4000';
 
@@ -19,6 +21,7 @@ interface ShiftSummary {
   totalAmount: number;
   averageTicket: number;
   paymentSummary: Record<string, { count: number; amount: number }>;
+  brandSummary: Record<string, { count: number; amount: number }>;
   startTime: Date;
   endTime: Date;
 }
@@ -84,20 +87,23 @@ export default function FinalizarTurno() {
         fim: now.toISOString()
       });
 
-      // Buscar vendas desde o início do turno
-      const { data: sales, error } = await supabase
+      // Buscar vendas desde o início do turno (com bandeira)
+      const { data: salesData, error } = await supabase
         .from('sales')
-        .select('id,total,forma_pagamento,created_at,sale_items(*)')
+        .select('*')
         .eq('user_id', user?.id)
         .gte('created_at', shiftStartTime.toISOString())
         .lte('created_at', now.toISOString());
 
-      console.log('📊 [calculateShiftSummary] Vendas encontradas:', sales?.length || 0);
+      console.log('📊 [calculateShiftSummary] Vendas encontradas:', salesData?.length || 0);
 
       if (error) {
         console.error('❌ [calculateShiftSummary] Erro ao buscar vendas:', error);
         throw error;
       }
+
+      // Type assertion para incluir bandeira
+      const sales = salesData as Array<any>;
 
       // Se não houver vendas, criar um resumo vazio
       if (!sales || sales.length === 0) {
@@ -107,6 +113,7 @@ export default function FinalizarTurno() {
           totalAmount: 0,
           averageTicket: 0,
           paymentSummary: {},
+          brandSummary: {},
           startTime: shiftStartTime,
           endTime: now,
         };
@@ -120,16 +127,28 @@ export default function FinalizarTurno() {
 
       // Calcular resumo com vendas
       console.log('📊 [calculateShiftSummary] Calculando resumo com vendas...');
-      const totalAmount = sales.reduce((sum, sale) => sum + Number(sale.total), 0);
+      const totalAmount = sales.reduce((sum: number, sale: any) => sum + Number(sale.total), 0);
       const paymentSummary: Record<string, { count: number; amount: number }> = {};
+      const brandSummary: Record<string, { count: number; amount: number }> = {};
 
-      sales.forEach(sale => {
+      sales.forEach((sale: any) => {
         const method = sale.forma_pagamento || 'outro';
         if (!paymentSummary[method]) {
           paymentSummary[method] = { count: 0, amount: 0 };
         }
         paymentSummary[method].count++;
         paymentSummary[method].amount += Number(sale.total);
+
+        // Agrupar por bandeira (quando disponível)
+        const bandeira = sale.bandeira;
+        if (bandeira) {
+          const brandKey = `${sale.forma_pagamento}_${bandeira}`;
+          if (!brandSummary[brandKey]) {
+            brandSummary[brandKey] = { count: 0, amount: 0 };
+          }
+          brandSummary[brandKey].count++;
+          brandSummary[brandKey].amount += Number(sale.total);
+        }
       });
 
       const shiftSummary: ShiftSummary = {
@@ -137,6 +156,7 @@ export default function FinalizarTurno() {
         totalAmount,
         averageTicket: totalAmount / sales.length,
         paymentSummary,
+        brandSummary,
         startTime: shiftStartTime,
         endTime: now,
       };
@@ -526,6 +546,152 @@ export default function FinalizarTurno() {
     }
   };
 
+  const generatePDFReport = async () => {
+    if (!summary) return;
+
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      
+      // Header
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('RELATÓRIO DE FECHAMENTO DE TURNO', pageWidth / 2, 20, { align: 'center' });
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Funcionário: ${user?.name || 'Sistema'}`, 14, 35);
+      doc.text(`Data: ${format(summary.endTime, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, 14, 42);
+      doc.text(`Período: ${format(summary.startTime, "HH:mm", { locale: ptBR })} - ${format(summary.endTime, "HH:mm", { locale: ptBR })}`, 14, 49);
+      doc.text(`Tempo Trabalhado: ${workedTime}`, 14, 56);
+
+      // Resumo Geral
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('RESUMO GERAL', 14, 70);
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Total de Vendas: ${summary.totalSales}`, 14, 80);
+      doc.text(`Total Vendido: R$ ${summary.totalAmount.toFixed(2)}`, 14, 87);
+      doc.text(`Ticket Médio: R$ ${summary.averageTicket.toFixed(2)}`, 14, 94);
+
+      let yPosition = 110;
+
+      // Resumo por Forma de Pagamento
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('RESUMO POR FORMA DE PAGAMENTO', 14, yPosition);
+      yPosition += 10;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      
+      Object.entries(summary.paymentSummary).forEach(([method, data]) => {
+        const label = paymentMethodLabels[method] || method;
+        doc.text(`${label}: R$ ${data.amount.toFixed(2)} (${data.count} transações)`, 14, yPosition);
+        yPosition += 7;
+      });
+
+      yPosition += 10;
+
+      // Resumo por Bandeira (Detalhado)
+      if (Object.keys(summary.brandSummary).length > 0) {
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('VENDAS POR BANDEIRA', 14, yPosition);
+        yPosition += 10;
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+
+        // Separar por tipo de pagamento
+        const debitoItems: Array<[string, { count: number; amount: number }]> = [];
+        const creditoItems: Array<[string, { count: number; amount: number }]> = [];
+        const outrosItems: Array<[string, { count: number; amount: number }]> = [];
+
+        Object.entries(summary.brandSummary).forEach(([key, data]) => {
+          if (key.startsWith('debito_')) {
+            debitoItems.push([key, data]);
+          } else if (key.startsWith('credito_')) {
+            creditoItems.push([key, data]);
+          } else {
+            outrosItems.push([key, data]);
+          }
+        });
+
+        // DÉBITO
+        if (debitoItems.length > 0) {
+          doc.setFont('helvetica', 'bold');
+          doc.text('DÉBITO:', 14, yPosition);
+          yPosition += 7;
+          doc.setFont('helvetica', 'normal');
+
+          debitoItems.forEach(([key, data]) => {
+            const brandeira = key.replace('debito_', '');
+            doc.text(`  ${brandeira.toUpperCase()}: R$ ${data.amount.toFixed(2)} (${data.count} transações)`, 14, yPosition);
+            yPosition += 7;
+          });
+          yPosition += 3;
+        }
+
+        // CRÉDITO
+        if (creditoItems.length > 0) {
+          doc.setFont('helvetica', 'bold');
+          doc.text('CRÉDITO:', 14, yPosition);
+          yPosition += 7;
+          doc.setFont('helvetica', 'normal');
+
+          creditoItems.forEach(([key, data]) => {
+            const bandeira = key.replace('credito_', '');
+            doc.text(`  ${bandeira.toUpperCase()}: R$ ${data.amount.toFixed(2)} (${data.count} transações)`, 14, yPosition);
+            yPosition += 7;
+          });
+          yPosition += 3;
+        }
+
+        // OUTROS
+        if (outrosItems.length > 0) {
+          doc.setFont('helvetica', 'bold');
+          doc.text('OUTRAS FORMAS:', 14, yPosition);
+          yPosition += 7;
+          doc.setFont('helvetica', 'normal');
+
+          outrosItems.forEach(([key, data]) => {
+            const parts = key.split('_');
+            const method = parts[0];
+            const bandeira = parts.slice(1).join(' ');
+            doc.text(`  ${(method + ' ' + bandeira).toUpperCase()}: R$ ${data.amount.toFixed(2)} (${data.count} transações)`, 14, yPosition);
+            yPosition += 7;
+          });
+        }
+      }
+
+      // Footer
+      const footerY = doc.internal.pageSize.getHeight() - 20;
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'italic');
+      doc.text('PDV-INOVAPRO - Sistema de Gestão', pageWidth / 2, footerY, { align: 'center' });
+      doc.text(`Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm:ss", { locale: ptBR })}`, pageWidth / 2, footerY + 5, { align: 'center' });
+
+      // Salvar PDF
+      const fileName = `relatorio_turno_${user?.name}_${format(new Date(), 'ddMMyyyy_HHmmss')}.pdf`;
+      doc.save(fileName);
+
+      toast({
+        title: 'PDF Gerado!',
+        description: 'O relatório foi baixado com sucesso.',
+      });
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Erro ao gerar o PDF do relatório.',
+      });
+    }
+  };
+
   return (
     <Layout title="Finalizar Turno" showBack>
       <div className="max-w-4xl mx-auto space-y-6">
@@ -692,9 +858,13 @@ export default function FinalizarTurno() {
               </div>
             )}
 
-            <DialogFooter>
+            <DialogFooter className="gap-2">
               <Button variant="outline" onClick={() => setShowReport(false)}>
                 Cancelar
+              </Button>
+              <Button variant="secondary" onClick={generatePDFReport} disabled={loading}>
+                <Download className="w-4 h-4 mr-2" />
+                Gerar PDF
               </Button>
               <Button onClick={finalizeShift} disabled={loading}>
                 {loading ? 'Finalizando...' : 'Finalizar e Salvar'}
