@@ -43,6 +43,8 @@ export default function PDV() {
   const [showSalesDialog, setShowSalesDialog] = useState(false);
   const [salesItems, setSalesItems] = useState<any[]>([]);
   const [loadingSalesItems, setLoadingSalesItems] = useState(false);
+  const [showBrandSummaryDialog, setShowBrandSummaryDialog] = useState(false);
+  const [brandSummary, setBrandSummary] = useState<Record<string, { count: number; amount: number }>>({});
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -65,7 +67,7 @@ export default function PDV() {
 
         const { data, error } = await supabase
           .from('sales')
-          .select('total')
+          .select('*')
           .gte('created_at', dayStart.toISOString())
           .lte('created_at', dayEnd.toISOString());
 
@@ -76,9 +78,24 @@ export default function PDV() {
           const count = data.length;
           const average = total / count;
 
+          // Agrupar por bandeira
+          const brandSummaryData: Record<string, { count: number; amount: number }> = {};
+          (data as any[]).forEach((sale: any) => {
+            if (sale.bandeira) {
+              const key = `${sale.forma_pagamento}_${sale.bandeira}`;
+              if (!brandSummaryData[key]) {
+                brandSummaryData[key] = { count: 0, amount: 0 };
+              }
+              brandSummaryData[key].count++;
+              brandSummaryData[key].amount += Number(sale.total);
+            }
+          });
+
+          setBrandSummary(brandSummaryData);
           setShiftSummary({ total, count, average });
         } else {
           setShiftSummary({ total: 0, count: 0, average: 0 });
+          setBrandSummary({});
         }
         return;
       }
@@ -95,13 +112,14 @@ export default function PDV() {
       if (shiftError || !activeShift) {
         // Se não há turno ativo, mostrar zeros
         setShiftSummary({ total: 0, count: 0, average: 0 });
+        setBrandSummary({});
         return;
       }
 
       // Buscar vendas desde o início do turno ativo
       const { data, error } = await supabase
         .from('sales')
-        .select('total')
+        .select('*')
         .eq('user_id', user.id)
         .gte('created_at', activeShift.start_time);
 
@@ -112,9 +130,24 @@ export default function PDV() {
         const count = data.length;
         const average = total / count;
 
+        // Agrupar por bandeira
+        const brandSummaryData: Record<string, { count: number; amount: number }> = {};
+        (data as any[]).forEach((sale: any) => {
+          if (sale.bandeira) {
+            const key = `${sale.forma_pagamento}_${sale.bandeira}`;
+            if (!brandSummaryData[key]) {
+              brandSummaryData[key] = { count: 0, amount: 0 };
+            }
+            brandSummaryData[key].count++;
+            brandSummaryData[key].amount += Number(sale.total);
+          }
+        });
+
+        setBrandSummary(brandSummaryData);
         setShiftSummary({ total, count, average });
       } else {
         setShiftSummary({ total: 0, count: 0, average: 0 });
+        setBrandSummary({});
       }
     } catch (error) {
       console.error('Error loading shift summary:', error);
@@ -1103,6 +1136,119 @@ export default function PDV() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowSalesDialog(false)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de Vendas por Bandeira */}
+      <Dialog open={showBrandSummaryDialog} onOpenChange={setShowBrandSummaryDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Vendas por Bandeira</DialogTitle>
+          </DialogHeader>
+          {Object.keys(brandSummary).length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhuma venda com bandeira registrada ainda.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Separar por débito e crédito */}
+              {(() => {
+                const debito = Object.entries(brandSummary).filter(([key]) => key.startsWith('debito_'));
+                const credito = Object.entries(brandSummary).filter(([key]) => key.startsWith('credito_'));
+                const outros = Object.entries(brandSummary).filter(([key]) => !key.startsWith('debito_') && !key.startsWith('credito_'));
+
+                return (
+                  <>
+                    {/* Débito */}
+                    {debito.length > 0 && (
+                      <div>
+                        <h3 className="font-bold text-lg mb-2">Débito</h3>
+                        <div className="space-y-2">
+                          {debito.map(([key, data]) => {
+                            const bandeira = key.replace('debito_', '').replace(/_/g, ' ');
+                            return (
+                              <Card key={key} className="p-4">
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <p className="font-medium capitalize">{bandeira}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {data.count} transações
+                                    </p>
+                                  </div>
+                                  <p className="font-bold text-primary text-xl">
+                                    R$ {data.amount.toFixed(2)}
+                                  </p>
+                                </div>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Crédito */}
+                    {credito.length > 0 && (
+                      <div>
+                        <h3 className="font-bold text-lg mb-2">Crédito</h3>
+                        <div className="space-y-2">
+                          {credito.map(([key, data]) => {
+                            const bandeira = key.replace('credito_', '').replace(/_/g, ' ');
+                            return (
+                              <Card key={key} className="p-4">
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <p className="font-medium capitalize">{bandeira}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {data.count} transações
+                                    </p>
+                                  </div>
+                                  <p className="font-bold text-primary text-xl">
+                                    R$ {data.amount.toFixed(2)}
+                                  </p>
+                                </div>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Outros */}
+                    {outros.length > 0 && (
+                      <div>
+                        <h3 className="font-bold text-lg mb-2">Outras Formas</h3>
+                        <div className="space-y-2">
+                          {outros.map(([key, data]) => {
+                            const label = key.replace(/_/g, ' ');
+                            return (
+                              <Card key={key} className="p-4">
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <p className="font-medium capitalize">{label}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {data.count} transações
+                                    </p>
+                                  </div>
+                                  <p className="font-bold text-primary text-xl">
+                                    R$ {data.amount.toFixed(2)}
+                                  </p>
+                                </div>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBrandSummaryDialog(false)}>
               Fechar
             </Button>
           </DialogFooter>
