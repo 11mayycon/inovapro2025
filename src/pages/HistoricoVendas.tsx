@@ -36,6 +36,8 @@ export default function HistoricoVendas() {
   const [canceling, setCanceling] = useState(false);
   const [filterDate, setFilterDate] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [showBrandsDialog, setShowBrandsDialog] = useState(false);
+  const [selectedType, setSelectedType] = useState<'credito' | 'debito' | null>(null);
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
 
@@ -262,7 +264,28 @@ export default function HistoricoVendas() {
     dinheiro: sales.filter(s => s.forma_pagamento === 'dinheiro').reduce((sum, s) => sum + Number(s.total), 0),
   };
 
+  // Calcular totais por bandeira específica
+  const creditoBrandsSummary = {
+    visa: sales.filter(s => s.forma_pagamento === 'visa_credito').reduce((sum, s) => sum + Number(s.total), 0),
+    mastercard: sales.filter(s => s.forma_pagamento === 'mastercard_credito').reduce((sum, s) => sum + Number(s.total), 0),
+    elo: sales.filter(s => s.forma_pagamento === 'elo_credito').reduce((sum, s) => sum + Number(s.total), 0),
+    amex: sales.filter(s => s.forma_pagamento === 'amex_hipercard_credsystem').reduce((sum, s) => sum + Number(s.total), 0),
+    generico: sales.filter(s => s.forma_pagamento === 'cartao_credito').reduce((sum, s) => sum + Number(s.total), 0),
+  };
+
+  const debitoBrandsSummary = {
+    visa: sales.filter(s => s.forma_pagamento === 'visa_debito').reduce((sum, s) => sum + Number(s.total), 0),
+    maestro: sales.filter(s => s.forma_pagamento === 'maestro_debito').reduce((sum, s) => sum + Number(s.total), 0),
+    elo: sales.filter(s => s.forma_pagamento === 'elo_debito').reduce((sum, s) => sum + Number(s.total), 0),
+    generico: sales.filter(s => s.forma_pagamento === 'cartao_debito').reduce((sum, s) => sum + Number(s.total), 0),
+  };
+
   const totalGeral = paymentSummary.pix + paymentSummary.credito + paymentSummary.debito + paymentSummary.dinheiro;
+
+  const openBrandsDialog = (type: 'credito' | 'debito') => {
+    setSelectedType(type);
+    setShowBrandsDialog(true);
+  };
 
   return (
     <Layout title="Histórico de Vendas" showBack>
@@ -275,16 +298,24 @@ export default function HistoricoVendas() {
               <p className="text-2xl font-bold">R$ {paymentSummary.pix.toFixed(2)}</p>
             </div>
           </Card>
-          <Card className="p-4 bg-gradient-to-br from-green-500 to-green-600 text-white">
+          <Card 
+            className="p-4 bg-gradient-to-br from-green-500 to-green-600 text-white cursor-pointer hover:shadow-lg transition-all active:scale-95"
+            onClick={() => openBrandsDialog('credito')}
+          >
             <div className="space-y-1">
-              <p className="text-sm opacity-90">Crédito</p>
+              <p className="text-sm opacity-90">Crédito 💳</p>
               <p className="text-2xl font-bold">R$ {paymentSummary.credito.toFixed(2)}</p>
+              <p className="text-xs opacity-75">Clique para ver detalhes</p>
             </div>
           </Card>
-          <Card className="p-4 bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+          <Card 
+            className="p-4 bg-gradient-to-br from-purple-500 to-purple-600 text-white cursor-pointer hover:shadow-lg transition-all active:scale-95"
+            onClick={() => openBrandsDialog('debito')}
+          >
             <div className="space-y-1">
-              <p className="text-sm opacity-90">Débito</p>
+              <p className="text-sm opacity-90">Débito 💳</p>
               <p className="text-2xl font-bold">R$ {paymentSummary.debito.toFixed(2)}</p>
+              <p className="text-xs opacity-75">Clique para ver detalhes</p>
             </div>
           </Card>
           <Card className="p-4 bg-gradient-to-br from-orange-500 to-orange-600 text-white">
@@ -469,6 +500,162 @@ export default function HistoricoVendas() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Detalhes por Bandeira */}
+      <Dialog open={showBrandsDialog} onOpenChange={setShowBrandsDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedType === 'credito' ? 'Detalhes Crédito por Bandeira' : 'Detalhes Débito por Bandeira'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {selectedType === 'credito' ? (
+              <>
+                {creditoBrandsSummary.visa > 0 && (
+                  <Card className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">💳</span>
+                        <span className="font-semibold text-blue-900">Visa Crédito</span>
+                      </div>
+                      <span className="text-xl font-bold text-blue-700">
+                        R$ {creditoBrandsSummary.visa.toFixed(2)}
+                      </span>
+                    </div>
+                  </Card>
+                )}
+                {creditoBrandsSummary.mastercard > 0 && (
+                  <Card className="p-4 bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">💳</span>
+                        <span className="font-semibold text-orange-900">Mastercard Crédito</span>
+                      </div>
+                      <span className="text-xl font-bold text-orange-700">
+                        R$ {creditoBrandsSummary.mastercard.toFixed(2)}
+                      </span>
+                    </div>
+                  </Card>
+                )}
+                {creditoBrandsSummary.elo > 0 && (
+                  <Card className="p-4 bg-gradient-to-r from-yellow-50 to-yellow-100 border-yellow-200">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">💳</span>
+                        <span className="font-semibold text-yellow-900">Elo Crédito</span>
+                      </div>
+                      <span className="text-xl font-bold text-yellow-700">
+                        R$ {creditoBrandsSummary.elo.toFixed(2)}
+                      </span>
+                    </div>
+                  </Card>
+                )}
+                {creditoBrandsSummary.amex > 0 && (
+                  <Card className="p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 border-indigo-200">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">💳</span>
+                        <span className="font-semibold text-indigo-900">Amex/Hipercard</span>
+                      </div>
+                      <span className="text-xl font-bold text-indigo-700">
+                        R$ {creditoBrandsSummary.amex.toFixed(2)}
+                      </span>
+                    </div>
+                  </Card>
+                )}
+                {creditoBrandsSummary.generico > 0 && (
+                  <Card className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">💳</span>
+                        <span className="font-semibold text-gray-900">Crédito (Genérico)</span>
+                      </div>
+                      <span className="text-xl font-bold text-gray-700">
+                        R$ {creditoBrandsSummary.generico.toFixed(2)}
+                      </span>
+                    </div>
+                  </Card>
+                )}
+              </>
+            ) : (
+              <>
+                {debitoBrandsSummary.visa > 0 && (
+                  <Card className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">💳</span>
+                        <span className="font-semibold text-blue-900">Visa Débito</span>
+                      </div>
+                      <span className="text-xl font-bold text-blue-700">
+                        R$ {debitoBrandsSummary.visa.toFixed(2)}
+                      </span>
+                    </div>
+                  </Card>
+                )}
+                {debitoBrandsSummary.maestro > 0 && (
+                  <Card className="p-4 bg-gradient-to-r from-red-50 to-red-100 border-red-200">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">💳</span>
+                        <span className="font-semibold text-red-900">Maestro Débito</span>
+                      </div>
+                      <span className="text-xl font-bold text-red-700">
+                        R$ {debitoBrandsSummary.maestro.toFixed(2)}
+                      </span>
+                    </div>
+                  </Card>
+                )}
+                {debitoBrandsSummary.elo > 0 && (
+                  <Card className="p-4 bg-gradient-to-r from-yellow-50 to-yellow-100 border-yellow-200">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">💳</span>
+                        <span className="font-semibold text-yellow-900">Elo Débito</span>
+                      </div>
+                      <span className="text-xl font-bold text-yellow-700">
+                        R$ {debitoBrandsSummary.elo.toFixed(2)}
+                      </span>
+                    </div>
+                  </Card>
+                )}
+                {debitoBrandsSummary.generico > 0 && (
+                  <Card className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">💳</span>
+                        <span className="font-semibold text-gray-900">Débito (Genérico)</span>
+                      </div>
+                      <span className="text-xl font-bold text-gray-700">
+                        R$ {debitoBrandsSummary.generico.toFixed(2)}
+                      </span>
+                    </div>
+                  </Card>
+                )}
+              </>
+            )}
+            
+            <div className="border-t pt-4">
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-bold">Total {selectedType === 'credito' ? 'Crédito' : 'Débito'}:</span>
+                <span className="text-2xl font-bold text-primary">
+                  R$ {selectedType === 'credito' 
+                    ? paymentSummary.credito.toFixed(2)
+                    : paymentSummary.debito.toFixed(2)
+                  }
+                </span>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => setShowBrandsDialog(false)}
+              className="w-full"
+            >
+              Fechar
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </Layout>
