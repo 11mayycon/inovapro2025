@@ -188,8 +188,39 @@ export default function FinalizarTurno() {
     try {
       console.log('🔵 [finalizeShift] Iniciando finalização...');
 
+      // Primeiro, registrar saída no ponto
+      const { data: pontoAberto, error: pontoError } = await supabase
+        .from('ponto')
+        .select('*')
+        .eq('user_id', user?.id)
+        .is('saida', null)
+        .order('entrada', { ascending: false })
+        .limit(1);
+
+      console.log('📋 [finalizeShift] Ponto aberto:', pontoAberto);
+
+      if (!pontoError && pontoAberto && pontoAberto.length > 0) {
+        // Registrar saída
+        const now = new Date();
+        console.log('⏰ [finalizeShift] Registrando saída:', now.toISOString());
+
+        const { error: updateError } = await supabase
+          .from('ponto')
+          .update({ saida: now.toISOString() })
+          .eq('id', pontoAberto[0].id);
+
+        if (updateError) {
+          console.error('❌ [finalizeShift] Erro ao registrar saída:', updateError);
+          throw updateError;
+        }
+
+        console.log('✅ [finalizeShift] Saída registrada com sucesso');
+      } else {
+        console.log('⚠️ [finalizeShift] Nenhum ponto em aberto encontrado');
+      }
+
       // Buscar dados do ponto para a mensagem privada
-      const { data: pontoData, error: pontoError } = await supabase
+      const { data: pontoData, error: pontoDataError } = await supabase
         .from('ponto')
         .select('entrada, saida')
         .eq('user_id', user?.id)
@@ -474,48 +505,17 @@ export default function FinalizarTurno() {
   const handleFinalizarTurno = async () => {
     setLoading(true);
     try {
-      console.log('🔵 Iniciando finalização de turno...');
-
-      // Buscar último ponto em aberto para calcular tempo trabalhado
-      const { data: pontoAberto, error: pontoError } = await supabase
-        .from('ponto')
-        .select('*')
-        .eq('user_id', user?.id)
-        .is('saida', null)
-        .order('entrada', { ascending: false })
-        .limit(1);
-
-      console.log('📋 Ponto aberto:', pontoAberto);
-
-      if (!pontoError && pontoAberto && pontoAberto.length > 0) {
-        // Registrar saída
-        const now = new Date();
-        console.log('⏰ Registrando saída:', now.toISOString());
-
-        const { error: updateError } = await supabase
-          .from('ponto')
-          .update({ saida: now.toISOString() })
-          .eq('id', pontoAberto[0].id);
-
-        if (updateError) {
-          console.error('❌ Erro ao registrar saída:', updateError);
-          throw updateError;
-        }
-
-        console.log('✅ Saída registrada com sucesso');
-      } else {
-        console.log('⚠️ Nenhum ponto em aberto encontrado');
-      }
-
-      // Calcular resumo do turno
+      console.log('🔵 Abrindo relatório de turno...');
+      
+      // Apenas calcular resumo do turno, sem registrar saída
       console.log('📊 Calculando resumo do turno...');
       await calculateShiftSummary();
     } catch (error) {
-      console.error('❌ Error finalizing shift:', error);
+      console.error('❌ Error opening shift report:', error);
       toast({
         variant: 'destructive',
         title: 'Erro',
-        description: `Erro ao finalizar turno: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        description: `Erro ao abrir relatório: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       });
       setLoading(false);
     }
