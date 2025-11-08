@@ -394,7 +394,17 @@ export default function PDV() {
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && search.trim()) {
-      handleBarcodeScan(search.trim());
+      // Se houver produtos na lista, selecionar o primeiro
+      if (products.length > 0) {
+        addToCart(products[0]);
+        toast({
+          title: "Produto adicionado",
+          description: `${products[0].nome} foi adicionado ao carrinho`,
+        });
+      } else {
+        // Caso contrário, buscar pelo código de barras
+        handleBarcodeScan(search.trim());
+      }
     }
   };
 
