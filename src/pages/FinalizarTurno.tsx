@@ -580,11 +580,11 @@ export default function FinalizarTurno() {
       const creditoData: Record<string, number> = {};
       
       Object.entries(summary.brandSummary).forEach(([key, data]) => {
-        if (key.startsWith('debito_')) {
-          const bandeira = key.replace('debito_', '').toUpperCase();
+        if (key.startsWith('cartao_debito_') || key.startsWith('debito_')) {
+          const bandeira = key.replace('cartao_debito_', '').replace('debito_', '').toUpperCase();
           debitoData[bandeira] = data.amount;
-        } else if (key.startsWith('credito_')) {
-          const bandeira = key.replace('credito_', '').toUpperCase();
+        } else if (key.startsWith('cartao_credito_') || key.startsWith('credito_')) {
+          const bandeira = key.replace('cartao_credito_', '').replace('credito_', '').toUpperCase();
           creditoData[bandeira] = data.amount;
         }
       });
