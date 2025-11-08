@@ -129,8 +129,33 @@ export default function HistoricoVendas() {
       cartao_credito: 'Cartão de Crédito',
       pix: 'PIX',
       outro: 'Outro',
+      visa_credito: 'Visa Crédito',
+      visa_debito: 'Visa Débito',
+      elo_credito: 'Elo Crédito',
+      elo_debito: 'Elo Débito',
+      mastercard_credito: 'Mastercard Crédito',
+      maestro_debito: 'Maestro Débito',
+      amex_hipercard_credsystem: 'Amex/Hipercard/Credsystem',
     };
     return methods[method] || method;
+  };
+
+  const getCardBrandIcon = (method: string) => {
+    // Retorna emoji/ícone para cada bandeira
+    const icons: Record<string, string> = {
+      visa_credito: '💳 Visa',
+      visa_debito: '💳 Visa',
+      elo_credito: '💳 Elo',
+      elo_debito: '💳 Elo',
+      mastercard_credito: '💳 Mastercard',
+      maestro_debito: '💳 Maestro',
+      amex_hipercard_credsystem: '💳 Amex/Hiper',
+      cartao_credito: '💳 Crédito',
+      cartao_debito: '💳 Débito',
+      pix: '📱 PIX',
+      dinheiro: '💵 Dinheiro',
+    };
+    return icons[method] || '💰';
   };
 
   const handlePrintReceipt = async () => {
@@ -354,9 +379,12 @@ export default function HistoricoVendas() {
                     <Calendar className="w-4 h-4" />
                     {format(new Date(sale.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                   </div>
-                  <p className="text-sm">
-                    Pagamento: {formatPaymentMethod(sale.forma_pagamento)}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{getCardBrandIcon(sale.forma_pagamento)}</span>
+                    <p className="text-sm font-medium">
+                      {formatPaymentMethod(sale.forma_pagamento)}
+                    </p>
+                  </div>
                 </div>
                 <div className="text-right">
                   <div className="flex items-center gap-2 text-2xl font-bold text-primary">
@@ -388,10 +416,11 @@ export default function HistoricoVendas() {
                     <span className="font-medium">Vendedor:</span> {selectedSale.users.name}
                   </p>
                 )}
-                <p>
-                  <span className="font-medium">Pagamento:</span>{' '}
-                  {formatPaymentMethod(selectedSale.forma_pagamento)}
-                </p>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Pagamento:</span>
+                  <span className="text-lg">{getCardBrandIcon(selectedSale.forma_pagamento)}</span>
+                  <span>{formatPaymentMethod(selectedSale.forma_pagamento)}</span>
+                </div>
               </div>
 
               <div className="space-y-2">
