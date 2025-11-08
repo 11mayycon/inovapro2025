@@ -550,51 +550,42 @@ export default function FinalizarTurno() {
     if (!summary) return;
 
     try {
-      const doc = new jsPDF('landscape', 'mm', 'a4');
+      const doc = new jsPDF('portrait', 'mm', 'a4');
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       
-      // Função auxiliar para desenhar caixas
-      const drawBox = (x: number, y: number, width: number, height: number) => {
-        doc.rect(x, y, width, height);
-      };
-
-      // Função para texto rotacionado (vertical)
-      const drawVerticalText = (text: string, x: number, y: number) => {
-        doc.text(text, x, y, { angle: 90 });
-      };
-
       // CABEÇALHO
-      let yPos = 10;
-      doc.setFontSize(12);
+      let yPos = 15;
+      doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
       doc.text('CONVENIÊNCIA CAMINHO CERTO', pageWidth / 2, yPos, { align: 'center' });
       
-      yPos += 8;
-      doc.setFontSize(9);
+      yPos += 10;
+      doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
-      doc.text(`CAIXA: ${user?.name || 'Sistema'}`, 10, yPos);
+      doc.text(`CAIXA: ${user?.name || 'Sistema'}`, 20, yPos);
       doc.text(`DATA: ${format(summary.endTime, "dd/MM/yyyy", { locale: ptBR })}`, pageWidth - 60, yPos);
       
-      yPos += 6;
-      doc.text('PERÍODO: NOITE', 10, yPos);
+      yPos += 7;
+      doc.text('PERÍODO: NOITE', 20, yPos);
+      doc.text(`HORÁRIO: ${format(summary.startTime, "HH:mm", { locale: ptBR })} - ${format(summary.endTime, "HH:mm", { locale: ptBR })}`, pageWidth - 60, yPos);
 
-      yPos += 10;
+      yPos += 12;
+      doc.setLineWidth(0.5);
+      doc.line(20, yPos, pageWidth - 20, yPos);
+      yPos += 8;
 
-      // Preparar dados por bandeira
+      // Separar dados por tipo
       const debitoData: Record<string, number> = {};
       const creditoData: Record<string, number> = {};
-      const outrosData: Record<string, number> = {};
       
       Object.entries(summary.brandSummary).forEach(([key, data]) => {
         if (key.startsWith('debito_')) {
-          const bandeira = key.replace('debito_', '');
+          const bandeira = key.replace('debito_', '').toUpperCase();
           debitoData[bandeira] = data.amount;
         } else if (key.startsWith('credito_')) {
-          const bandeira = key.replace('credito_', '');
+          const bandeira = key.replace('credito_', '').toUpperCase();
           creditoData[bandeira] = data.amount;
-        } else {
-          outrosData[key] = data.amount;
         }
       });
 
@@ -602,162 +593,177 @@ export default function FinalizarTurno() {
       const pix = summary.paymentSummary['pix']?.amount || 0;
       const totalRefeicao = summary.paymentSummary['vale_refeicao']?.amount || 0;
 
-      // Calcular totais
+      // SEÇÃO: CRÉDITO
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CARTÃO DE CRÉDITO', 20, yPos);
+      yPos += 7;
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      
+      Object.entries(creditoData).forEach(([bandeira, valor]) => {
+        doc.text(`TOTAL CRÉDITO ${bandeira}:`, 25, yPos);
+        doc.text(`R$ ${valor.toFixed(2)}`, pageWidth - 40, yPos);
+        yPos += 6;
+      });
+
+      if (Object.keys(creditoData).length === 0) {
+        doc.setFont('helvetica', 'italic');
+        doc.text('Nenhuma venda no crédito', 25, yPos);
+        yPos += 6;
+      }
+
+      yPos += 3;
+
+      // SEÇÃO: DÉBITO
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CARTÃO DE DÉBITO', 20, yPos);
+      yPos += 7;
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      
+      Object.entries(debitoData).forEach(([bandeira, valor]) => {
+        doc.text(`TOTAL DÉBITO ${bandeira}:`, 25, yPos);
+        doc.text(`R$ ${valor.toFixed(2)}`, pageWidth - 40, yPos);
+        yPos += 6;
+      });
+
+      if (Object.keys(debitoData).length === 0) {
+        doc.setFont('helvetica', 'italic');
+        doc.text('Nenhuma venda no débito', 25, yPos);
+        yPos += 6;
+      }
+
+      yPos += 3;
+
+      // SEÇÃO: PIX
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('PIX', 20, yPos);
+      yPos += 7;
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('TOTAL PIX:', 25, yPos);
+      doc.text(`R$ ${pix.toFixed(2)}`, pageWidth - 40, yPos);
+      yPos += 6;
+
+      yPos += 3;
+
+      // SEÇÃO: DINHEIRO
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('DINHEIRO', 20, yPos);
+      yPos += 7;
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('TOTAL DINHEIRO:', 25, yPos);
+      doc.text(`R$ ${dinheiro.toFixed(2)}`, pageWidth - 40, yPos);
+      yPos += 6;
+
+      yPos += 3;
+
+      // SEÇÃO: VALE REFEIÇÃO (se houver)
+      if (totalRefeicao > 0) {
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('VALE REFEIÇÃO', 20, yPos);
+        yPos += 7;
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text('TOTAL VALE REFEIÇÃO:', 25, yPos);
+        doc.text(`R$ ${totalRefeicao.toFixed(2)}`, pageWidth - 40, yPos);
+        yPos += 6;
+
+        yPos += 3;
+      }
+
+      // LINHA SEPARADORA
+      yPos += 5;
+      doc.setLineWidth(0.8);
+      doc.line(20, yPos, pageWidth - 20, yPos);
+      yPos += 10;
+
+      // TOTAIS GERAIS
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      
       const totalDebito = Object.values(debitoData).reduce((sum, val) => sum + val, 0);
       const totalCredito = Object.values(creditoData).reduce((sum, val) => sum + val, 0);
       const totalGeral = summary.totalAmount;
 
-      // TABELA PRINCIPAL - Layout horizontal com todas as colunas
-      const startX = 10;
-      const colWidth = 12; // Largura de cada coluna
-      const headerHeight = 35; // Altura do cabeçalho com títulos verticais
-      const rowHeight = 8; // Altura de cada linha
-      
-      let currentX = startX;
+      doc.text('TOTAL DÉBITO GERAL:', 25, yPos);
+      doc.text(`R$ ${totalDebito.toFixed(2)}`, pageWidth - 40, yPos);
+      yPos += 8;
 
-      // Definir colunas (da esquerda para direita conforme a ficha)
-      const columns = [
-        { label: 'QUEBRA\nE SOBRA', value: '0.00' },
-        { label: 'TOTAL', value: totalGeral.toFixed(2) },
-        { label: 'SUBTOTAL\nREFEIÇÃO', value: totalRefeicao.toFixed(2) },
-        { label: 'VOUCHER', value: '' },
-        { label: 'ALELO', value: debitoData['alelo']?.toFixed(2) || '' },
-        { label: 'SUBTOTAL\nDÉBITO', value: totalDebito.toFixed(2) },
-        { label: 'PIX', value: pix.toFixed(2) },
-        { label: 'ELO\nDÉBITO', value: debitoData['elo']?.toFixed(2) || '' },
-        { label: 'MAESTRO\nDÉBITO', value: debitoData['maestro']?.toFixed(2) || '' },
-        { label: 'DÉBITO', value: debitoData['visa']?.toFixed(2) || '' },
-        { label: 'MASTERCARD\nCRÉDITO', value: creditoData['mastercard']?.toFixed(2) || creditoData['master']?.toFixed(2) || '' },
-        { label: 'AMEX REDBÓ\nCARTÃO CRÉDITO\nCREDSYSTEM', value: creditoData['amex']?.toFixed(2) || '' },
-        { label: 'MASTERCARD', value: '' },
-        { label: 'ELO\nCRÉDITO', value: creditoData['elo']?.toFixed(2) || '' },
-        { label: 'VISA\nCRÉDITO', value: creditoData['visa']?.toFixed(2) || '' },
-        { label: 'VALE\nFUNCIONÁRIO', value: '' },
-        { label: 'DINHEIRO\n(sangrias)', value: dinheiro.toFixed(2) }
-      ];
-
-      doc.setFontSize(6);
-      doc.setFont('helvetica', 'normal');
-
-      // Desenhar cabeçalhos e caixas
-      columns.forEach((col, index) => {
-        // Desenhar caixa do cabeçalho
-        drawBox(currentX, yPos, colWidth, headerHeight);
-        
-        // Escrever título (rotacionado/vertical)
-        const lines = col.label.split('\n');
-        let textY = yPos + headerHeight - 3;
-        
-        doc.setFont('helvetica', 'bold');
-        lines.forEach(line => {
-          doc.text(line, currentX + colWidth / 2, textY, { 
-            align: 'center',
-            angle: 90,
-            maxWidth: headerHeight - 4
-          });
-          textY -= (line.length * 0.8);
-        });
-        
-        currentX += colWidth;
-      });
-
-      // Linha de valores
-      currentX = startX;
-      const valueY = yPos + headerHeight;
-      
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7);
-      
-      columns.forEach((col) => {
-        // Desenhar caixa do valor
-        drawBox(currentX, valueY, colWidth, rowHeight);
-        
-        // Preencher valor se existir
-        if (col.value && col.value !== '0.00' && col.value !== '') {
-          doc.text(col.value, currentX + colWidth / 2, valueY + rowHeight / 2 + 1.5, { 
-            align: 'center'
-          });
-        }
-        
-        currentX += colWidth;
-      });
-
-      // SEÇÃO INFERIOR - RESUMO CAIXA
-      yPos = valueY + rowHeight + 10;
-      
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text('RESUMO CAIXA (R$)', startX, yPos);
-      
-      yPos += 5;
-      const resumoHeight = 60;
-      drawBox(startX, yPos, 120, resumoHeight);
-      
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      let resumoY = yPos + 7;
-
-      // Listar todos os pagamentos
-      if (dinheiro > 0) {
-        doc.text('Dinheiro:', startX + 5, resumoY);
-        doc.text(`R$ ${dinheiro.toFixed(2)}`, startX + 100, resumoY);
-        resumoY += 5;
-      }
+      doc.text('TOTAL CRÉDITO GERAL:', 25, yPos);
+      doc.text(`R$ ${totalCredito.toFixed(2)}`, pageWidth - 40, yPos);
+      yPos += 8;
 
       if (pix > 0) {
-        doc.text('PIX:', startX + 5, resumoY);
-        doc.text(`R$ ${pix.toFixed(2)}`, startX + 100, resumoY);
-        resumoY += 5;
+        doc.text('TOTAL PIX:', 25, yPos);
+        doc.text(`R$ ${pix.toFixed(2)}`, pageWidth - 40, yPos);
+        yPos += 8;
       }
 
-      resumoY += 2;
-      doc.setFont('helvetica', 'bold');
-      doc.text('SUBTOTAL DÉBITO:', startX + 5, resumoY);
-      doc.text(`R$ ${totalDebito.toFixed(2)}`, startX + 100, resumoY);
-      resumoY += 5;
+      if (dinheiro > 0) {
+        doc.text('TOTAL DINHEIRO:', 25, yPos);
+        doc.text(`R$ ${dinheiro.toFixed(2)}`, pageWidth - 40, yPos);
+        yPos += 8;
+      }
 
+      if (totalRefeicao > 0) {
+        doc.text('TOTAL VALE REFEIÇÃO:', 25, yPos);
+        doc.text(`R$ ${totalRefeicao.toFixed(2)}`, pageWidth - 40, yPos);
+        yPos += 8;
+      }
+
+      // LINHA SEPARADORA DUPLA
+      yPos += 3;
+      doc.setLineWidth(1.2);
+      doc.line(20, yPos, pageWidth - 20, yPos);
+      yPos += 2;
+      doc.line(20, yPos, pageWidth - 20, yPos);
+      yPos += 10;
+
+      // TOTAL GERAL (DESTAQUE)
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('TOTAL GERAL:', 25, yPos);
+      doc.text(`R$ ${totalGeral.toFixed(2)}`, pageWidth - 40, yPos);
+      yPos += 12;
+
+      // LINHA SEPARADORA
+      doc.setLineWidth(0.5);
+      doc.line(20, yPos, pageWidth - 20, yPos);
+      yPos += 10;
+
+      // INFORMAÇÕES DO TURNO
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('INFORMAÇÕES DO TURNO', 20, yPos);
+      yPos += 7;
+
+      doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
-      Object.entries(debitoData).forEach(([bandeira, valor]) => {
-        doc.text(`  ${bandeira.toUpperCase()}:`, startX + 10, resumoY);
-        doc.text(`R$ ${valor.toFixed(2)}`, startX + 100, resumoY);
-        resumoY += 4;
-      });
-
-      resumoY += 2;
-      doc.setFont('helvetica', 'bold');
-      doc.text('SUBTOTAL CRÉDITO:', startX + 5, resumoY);
-      doc.text(`R$ ${totalCredito.toFixed(2)}`, startX + 100, resumoY);
-      resumoY += 5;
-
-      doc.setFont('helvetica', 'normal');
-      Object.entries(creditoData).forEach(([bandeira, valor]) => {
-        doc.text(`  ${bandeira.toUpperCase()}:`, startX + 10, resumoY);
-        doc.text(`R$ ${valor.toFixed(2)}`, startX + 100, resumoY);
-        resumoY += 4;
-      });
-
-      // SANGRIAS
-      yPos = yPos + resumoHeight + 8;
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text('SANGRIAS', startX, yPos);
-      
+      doc.text(`Número de Vendas: ${summary.totalSales}`, 25, yPos);
       yPos += 5;
-      drawBox(startX, yPos, 120, 20);
-      
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Nenhuma sangria registrada', startX + 5, yPos + 10);
-
-      // DADOS DO TURNO
-      yPos += 28;
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Turno: ${format(summary.startTime, "HH:mm", { locale: ptBR })} - ${format(summary.endTime, "HH:mm", { locale: ptBR })} | Tempo: ${workedTime} | Vendas: ${summary.totalSales} | Ticket Médio: R$ ${summary.averageTicket.toFixed(2)}`, startX, yPos);
+      doc.text(`Ticket Médio: R$ ${summary.averageTicket.toFixed(2)}`, 25, yPos);
+      yPos += 5;
+      doc.text(`Tempo Trabalhado: ${workedTime}`, 25, yPos);
+      yPos += 5;
+      doc.text(`Início: ${format(summary.startTime, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, 25, yPos);
+      yPos += 5;
+      doc.text(`Fim: ${format(summary.endTime, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, 25, yPos);
 
       // Footer
-      const footerY = pageHeight - 10;
-      doc.setFontSize(7);
+      const footerY = pageHeight - 15;
+      doc.setFontSize(8);
       doc.setFont('helvetica', 'italic');
       doc.text('PDV-INOVAPRO - Sistema de Gestão', pageWidth / 2, footerY, { align: 'center' });
       doc.text(`Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm:ss", { locale: ptBR })}`, pageWidth / 2, footerY + 4, { align: 'center' });
