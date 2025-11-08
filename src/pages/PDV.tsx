@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,9 +45,35 @@ export default function PDV() {
   const [loadingSalesItems, setLoadingSalesItems] = useState(false);
   const [showBrandSummaryDialog, setShowBrandSummaryDialog] = useState(false);
   const [brandSummary, setBrandSummary] = useState<Record<string, { count: number; amount: number }>>({});
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Auto-focar no campo de busca quando digitar
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Ignorar se um dialog estiver aberto ou se estiver em um input/textarea
+      if (
+        showCheckout || 
+        showSalesDialog || 
+        showBrandSummaryDialog ||
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
+
+      // Focar no campo de busca se uma tecla alfanumérica for pressionada
+      if (searchInputRef.current && /^[a-zA-Z0-9]$/.test(e.key)) {
+        searchInputRef.current.focus();
+      }
+    };
+
+    window.addEventListener('keypress', handleKeyPress);
+    return () => window.removeEventListener('keypress', handleKeyPress);
+  }, [showCheckout, showSalesDialog, showBrandSummaryDialog]);
 
   // Carregar resumo de vendas do turno
   useEffect(() => {
@@ -826,6 +852,7 @@ export default function PDV() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
+                ref={searchInputRef}
                 placeholder="Escaneie ou digite o código de barras (Enter para adicionar)..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
