@@ -17,6 +17,7 @@ interface Sale {
   user_id: string;
   total: number;
   forma_pagamento: string;
+  bandeira?: string | null;
   created_at: string;
   users?: { name: string };
 }
@@ -102,6 +103,8 @@ export default function HistoricoVendas() {
 
       const { data, error } = await query;
       if (error) throw error;
+      
+      console.log('Sales loaded:', data); // Debug para ver se bandeira está vindo
       setSales(data || []);
     } catch (error) {
       console.error('Error loading sales:', error);
@@ -259,25 +262,25 @@ export default function HistoricoVendas() {
   // Calcular totais por forma de pagamento
   const paymentSummary = {
     pix: sales.filter(s => s.forma_pagamento === 'pix').reduce((sum, s) => sum + Number(s.total), 0),
-    credito: sales.filter(s => ['cartao_credito', 'visa_credito', 'elo_credito', 'mastercard_credito', 'amex_hipercard_credsystem'].includes(s.forma_pagamento)).reduce((sum, s) => sum + Number(s.total), 0),
-    debito: sales.filter(s => ['cartao_debito', 'visa_debito', 'elo_debito', 'maestro_debito'].includes(s.forma_pagamento)).reduce((sum, s) => sum + Number(s.total), 0),
+    credito: sales.filter(s => s.forma_pagamento === 'cartao_credito' || s.bandeira?.includes('credito')).reduce((sum, s) => sum + Number(s.total), 0),
+    debito: sales.filter(s => s.forma_pagamento === 'cartao_debito' || s.bandeira?.includes('debito')).reduce((sum, s) => sum + Number(s.total), 0),
     dinheiro: sales.filter(s => s.forma_pagamento === 'dinheiro').reduce((sum, s) => sum + Number(s.total), 0),
   };
 
-  // Calcular totais por bandeira específica
+  // Calcular totais por bandeira específica usando a coluna bandeira
   const creditoBrandsSummary = {
-    visa: sales.filter(s => s.forma_pagamento === 'visa_credito').reduce((sum, s) => sum + Number(s.total), 0),
-    mastercard: sales.filter(s => s.forma_pagamento === 'mastercard_credito').reduce((sum, s) => sum + Number(s.total), 0),
-    elo: sales.filter(s => s.forma_pagamento === 'elo_credito').reduce((sum, s) => sum + Number(s.total), 0),
-    amex: sales.filter(s => s.forma_pagamento === 'amex_hipercard_credsystem').reduce((sum, s) => sum + Number(s.total), 0),
-    generico: sales.filter(s => s.forma_pagamento === 'cartao_credito').reduce((sum, s) => sum + Number(s.total), 0),
+    visa: sales.filter(s => s.bandeira === 'visa_credito').reduce((sum, s) => sum + Number(s.total), 0),
+    mastercard: sales.filter(s => s.bandeira === 'mastercard_credito').reduce((sum, s) => sum + Number(s.total), 0),
+    elo: sales.filter(s => s.bandeira === 'elo_credito').reduce((sum, s) => sum + Number(s.total), 0),
+    amex: sales.filter(s => s.bandeira === 'amex_hipercard_credsystem').reduce((sum, s) => sum + Number(s.total), 0),
+    generico: sales.filter(s => s.forma_pagamento === 'cartao_credito' && !s.bandeira).reduce((sum, s) => sum + Number(s.total), 0),
   };
 
   const debitoBrandsSummary = {
-    visa: sales.filter(s => s.forma_pagamento === 'visa_debito').reduce((sum, s) => sum + Number(s.total), 0),
-    maestro: sales.filter(s => s.forma_pagamento === 'maestro_debito').reduce((sum, s) => sum + Number(s.total), 0),
-    elo: sales.filter(s => s.forma_pagamento === 'elo_debito').reduce((sum, s) => sum + Number(s.total), 0),
-    generico: sales.filter(s => s.forma_pagamento === 'cartao_debito').reduce((sum, s) => sum + Number(s.total), 0),
+    visa: sales.filter(s => s.bandeira === 'visa_debito').reduce((sum, s) => sum + Number(s.total), 0),
+    maestro: sales.filter(s => s.bandeira === 'maestro_debito').reduce((sum, s) => sum + Number(s.total), 0),
+    elo: sales.filter(s => s.bandeira === 'elo_debito').reduce((sum, s) => sum + Number(s.total), 0),
+    generico: sales.filter(s => s.forma_pagamento === 'cartao_debito' && !s.bandeira).reduce((sum, s) => sum + Number(s.total), 0),
   };
 
   const totalGeral = paymentSummary.pix + paymentSummary.credito + paymentSummary.debito + paymentSummary.dinheiro;
@@ -411,9 +414,9 @@ export default function HistoricoVendas() {
                     {format(new Date(sale.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{getCardBrandIcon(sale.forma_pagamento)}</span>
+                    <span className="text-lg">{getCardBrandIcon(sale.bandeira || sale.forma_pagamento)}</span>
                     <p className="text-sm font-medium">
-                      {formatPaymentMethod(sale.forma_pagamento)}
+                      {sale.bandeira ? formatPaymentMethod(sale.bandeira) : formatPaymentMethod(sale.forma_pagamento)}
                     </p>
                   </div>
                 </div>
@@ -449,8 +452,8 @@ export default function HistoricoVendas() {
                 )}
                 <div className="flex items-center gap-2">
                   <span className="font-medium">Pagamento:</span>
-                  <span className="text-lg">{getCardBrandIcon(selectedSale.forma_pagamento)}</span>
-                  <span>{formatPaymentMethod(selectedSale.forma_pagamento)}</span>
+                  <span className="text-lg">{getCardBrandIcon(selectedSale.bandeira || selectedSale.forma_pagamento)}</span>
+                  <span>{selectedSale.bandeira ? formatPaymentMethod(selectedSale.bandeira) : formatPaymentMethod(selectedSale.forma_pagamento)}</span>
                 </div>
               </div>
 

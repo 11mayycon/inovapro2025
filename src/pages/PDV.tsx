@@ -377,11 +377,20 @@ export default function PDV() {
 
     // Mapear forma de pagamento para os valores aceitos pelo enum do banco
     let finalPaymentMethod = paymentMethod;
+    let bandeira = null;
 
     if (paymentMethod === 'debito') {
       finalPaymentMethod = 'cartao_debito';
+      // Se há submétodo selecionado, usar como bandeira
+      if (paymentSubMethod) {
+        bandeira = paymentSubMethod;
+      }
     } else if (paymentMethod === 'credito') {
       finalPaymentMethod = 'cartao_credito';
+      // Se há submétodo selecionado, usar como bandeira
+      if (paymentSubMethod) {
+        bandeira = paymentSubMethod;
+      }
     }
 
     if (!finalPaymentMethod) {
@@ -389,6 +398,16 @@ export default function PDV() {
         variant: 'destructive',
         title: 'Erro',
         description: 'Selecione a forma de pagamento',
+      });
+      return;
+    }
+
+    // Validar se bandeira foi selecionada para débito/crédito
+    if ((paymentMethod === 'debito' || paymentMethod === 'credito') && !paymentSubMethod) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: `Selecione o tipo de ${paymentMethod === 'debito' ? 'débito' : 'crédito'}`,
       });
       return;
     }
@@ -431,13 +450,14 @@ export default function PDV() {
       const total = calculateTotal();
       const now = new Date();
 
-      // Criar venda
+      // Criar venda com bandeira
       const { data: sale, error: saleError } = await supabase
         .from('sales')
         .insert([{
           user_id: user?.id,
           total,
           forma_pagamento: finalPaymentMethod,
+          bandeira: bandeira, // Salvar a bandeira selecionada
         }] as any)
         .select()
         .single();
