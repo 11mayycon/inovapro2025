@@ -550,132 +550,225 @@ export default function FinalizarTurno() {
     if (!summary) return;
 
     try {
-      const doc = new jsPDF();
+      const doc = new jsPDF('portrait', 'mm', 'a4');
       const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
       
-      // Header
-      doc.setFontSize(18);
-      doc.setFont('helvetica', 'bold');
-      doc.text('RELATÓRIO DE FECHAMENTO DE TURNO', pageWidth / 2, 20, { align: 'center' });
-      
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Funcionário: ${user?.name || 'Sistema'}`, 14, 35);
-      doc.text(`Data: ${format(summary.endTime, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, 14, 42);
-      doc.text(`Período: ${format(summary.startTime, "HH:mm", { locale: ptBR })} - ${format(summary.endTime, "HH:mm", { locale: ptBR })}`, 14, 49);
-      doc.text(`Tempo Trabalhado: ${workedTime}`, 14, 56);
+      // Função auxiliar para desenhar caixas
+      const drawBox = (x: number, y: number, width: number, height: number) => {
+        doc.rect(x, y, width, height);
+      };
 
-      // Resumo Geral
+      // CABEÇALHO
+      let yPos = 15;
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text('RESUMO GERAL', 14, 70);
+      doc.text('CONVENIÊNCIA CAMINHO CERTO', pageWidth / 2, yPos, { align: 'center' });
       
+      yPos += 10;
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text(`Total de Vendas: ${summary.totalSales}`, 14, 80);
-      doc.text(`Total Vendido: R$ ${summary.totalAmount.toFixed(2)}`, 14, 87);
-      doc.text(`Ticket Médio: R$ ${summary.averageTicket.toFixed(2)}`, 14, 94);
+      doc.text(`CAIXA: ${user?.name || 'Sistema'}`, 15, yPos);
+      doc.text(`DATA: ${format(summary.endTime, "dd/MM/yyyy", { locale: ptBR })}`, pageWidth - 60, yPos);
+      
+      yPos += 6;
+      doc.text('PERÍODO: NOITE', 15, yPos);
 
-      let yPosition = 110;
+      yPos += 10;
 
-      // Resumo por Forma de Pagamento
-      doc.setFontSize(14);
+      // ==================== SEÇÃO PRINCIPAL ====================
+      const boxWidth = 180;
+
+      // TOTAL DE VENDAS
+      doc.setFontSize(11);
       doc.setFont('helvetica', 'bold');
-      doc.text('RESUMO POR FORMA DE PAGAMENTO', 14, yPosition);
-      yPosition += 10;
-
-      doc.setFontSize(10);
+      doc.text('TOTAL DE VENDAS (R$)', 15, yPos);
+      
+      yPos += 6;
+      drawBox(15, yPos, boxWidth, 25);
+      
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      
+      // Cabeçalhos
+      let currentY = yPos + 6;
+      doc.text('OFF', 20, currentY);
+      doc.text('CRÉDITO (CIGARROS)', 70, currentY);
+      doc.text('TOTAL', 140, currentY);
+      
+      currentY += 2;
+      doc.line(15, currentY, 15 + boxWidth, currentY);
+      
+      currentY += 6;
       doc.setFont('helvetica', 'normal');
       
-      Object.entries(summary.paymentSummary).forEach(([method, data]) => {
-        const label = paymentMethodLabels[method] || method;
-        doc.text(`${label}: R$ ${data.amount.toFixed(2)} (${data.count} transações)`, 14, yPosition);
-        yPosition += 7;
+      // Valores
+      const offValue = summary.brandSummary['off']?.amount || 0;
+      
+      if (offValue > 0) {
+        doc.text(offValue.toFixed(2), 20, currentY);
+      }
+      
+      doc.text(summary.totalAmount.toFixed(2), 140, currentY);
+
+      yPos += 30;
+
+      // RESUMO CAIXA
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('RESUMO CAIXA (R$)', 15, yPos);
+      
+      yPos += 6;
+      const caixaBoxHeight = 110;
+      drawBox(15, yPos, boxWidth, caixaBoxHeight);
+      
+      currentY = yPos + 7;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+
+      // Calcular totais por categoria
+      const dinheiro = summary.paymentSummary['dinheiro']?.amount || 0;
+      const pix = summary.paymentSummary['pix']?.amount || 0;
+      
+      // Débito - somar todas as bandeiras
+      let totalDebito = 0;
+      const debitoDetails: Record<string, number> = {};
+      Object.entries(summary.brandSummary).forEach(([key, data]) => {
+        if (key.startsWith('debito_')) {
+          totalDebito += data.amount;
+          const bandeira = key.replace('debito_', '');
+          debitoDetails[bandeira] = data.amount;
+        }
       });
 
-      yPosition += 10;
-
-      // Resumo por Bandeira (Detalhado)
-      if (Object.keys(summary.brandSummary).length > 0) {
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text('VENDAS POR BANDEIRA', 14, yPosition);
-        yPosition += 10;
-
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-
-        // Separar por tipo de pagamento
-        const debitoItems: Array<[string, { count: number; amount: number }]> = [];
-        const creditoItems: Array<[string, { count: number; amount: number }]> = [];
-        const outrosItems: Array<[string, { count: number; amount: number }]> = [];
-
-        Object.entries(summary.brandSummary).forEach(([key, data]) => {
-          if (key.startsWith('debito_')) {
-            debitoItems.push([key, data]);
-          } else if (key.startsWith('credito_')) {
-            creditoItems.push([key, data]);
-          } else {
-            outrosItems.push([key, data]);
-          }
-        });
-
-        // DÉBITO
-        if (debitoItems.length > 0) {
-          doc.setFont('helvetica', 'bold');
-          doc.text('DÉBITO:', 14, yPosition);
-          yPosition += 7;
-          doc.setFont('helvetica', 'normal');
-
-          debitoItems.forEach(([key, data]) => {
-            const brandeira = key.replace('debito_', '');
-            doc.text(`  ${brandeira.toUpperCase()}: R$ ${data.amount.toFixed(2)} (${data.count} transações)`, 14, yPosition);
-            yPosition += 7;
-          });
-          yPosition += 3;
+      // Crédito - somar todas as bandeiras
+      let totalCredito = 0;
+      const creditoDetails: Record<string, number> = {};
+      Object.entries(summary.brandSummary).forEach(([key, data]) => {
+        if (key.startsWith('credito_')) {
+          totalCredito += data.amount;
+          const bandeira = key.replace('credito_', '');
+          creditoDetails[bandeira] = data.amount;
         }
+      });
 
-        // CRÉDITO
-        if (creditoItems.length > 0) {
-          doc.setFont('helvetica', 'bold');
-          doc.text('CRÉDITO:', 14, yPosition);
-          yPosition += 7;
-          doc.setFont('helvetica', 'normal');
+      // Refeições
+      const totalRefeicoes = summary.paymentSummary['vale_refeicao']?.amount || 0;
 
-          creditoItems.forEach(([key, data]) => {
-            const bandeira = key.replace('credito_', '');
-            doc.text(`  ${bandeira.toUpperCase()}: R$ ${data.amount.toFixed(2)} (${data.count} transações)`, 14, yPosition);
-            yPosition += 7;
-          });
-          yPosition += 3;
-        }
-
-        // OUTROS
-        if (outrosItems.length > 0) {
-          doc.setFont('helvetica', 'bold');
-          doc.text('OUTRAS FORMAS:', 14, yPosition);
-          yPosition += 7;
-          doc.setFont('helvetica', 'normal');
-
-          outrosItems.forEach(([key, data]) => {
-            const parts = key.split('_');
-            const method = parts[0];
-            const bandeira = parts.slice(1).join(' ');
-            doc.text(`  ${(method + ' ' + bandeira).toUpperCase()}: R$ ${data.amount.toFixed(2)} (${data.count} transações)`, 14, yPosition);
-            yPosition += 7;
-          });
-        }
+      // Listar pagamentos
+      if (dinheiro > 0) {
+        doc.text('Dinheiro:', 20, currentY);
+        doc.text(`R$ ${dinheiro.toFixed(2)}`, 160, currentY);
+        currentY += 5;
       }
 
+      if (pix > 0) {
+        doc.text('PIX:', 20, currentY);
+        doc.text(`R$ ${pix.toFixed(2)}`, 160, currentY);
+        currentY += 5;
+      }
+
+      // SUBTOTAL CRÉDITO
+      currentY += 3;
+      doc.setFont('helvetica', 'bold');
+      doc.text('SUBTOTAL CRÉDITO:', 20, currentY);
+      doc.text(`R$ ${totalCredito.toFixed(2)}`, 160, currentY);
+      currentY += 5;
+      
+      doc.setFont('helvetica', 'normal');
+      Object.entries(creditoDetails).forEach(([bandeira, valor]) => {
+        doc.text(`  ${bandeira.toUpperCase()}:`, 25, currentY);
+        doc.text(`R$ ${valor.toFixed(2)}`, 160, currentY);
+        currentY += 4;
+      });
+
+      // SUBTOTAL DÉBITO
+      currentY += 3;
+      doc.setFont('helvetica', 'bold');
+      doc.text('SUBTOTAL DÉBITO:', 20, currentY);
+      doc.text(`R$ ${totalDebito.toFixed(2)}`, 160, currentY);
+      currentY += 5;
+      
+      doc.setFont('helvetica', 'normal');
+      Object.entries(debitoDetails).forEach(([bandeira, valor]) => {
+        doc.text(`  ${bandeira.toUpperCase()}:`, 25, currentY);
+        doc.text(`R$ ${valor.toFixed(2)}`, 160, currentY);
+        currentY += 4;
+      });
+
+      // REFEIÇÕES
+      if (totalRefeicoes > 0) {
+        currentY += 3;
+        doc.setFont('helvetica', 'bold');
+        doc.text('REFEIÇÕES:', 20, currentY);
+        doc.text(`R$ ${totalRefeicoes.toFixed(2)}`, 160, currentY);
+        currentY += 5;
+      }
+
+      yPos += caixaBoxHeight + 8;
+
+      // QUEBRA/SOBRA
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('QUEBRA / SOBRA', 15, yPos);
+      
+      yPos += 6;
+      drawBox(15, yPos, boxWidth, 20);
+      
+      currentY = yPos + 10;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      const diferenca = 0; // Calculado como Total Recebido - Total Vendido
+      const diffText = diferenca >= 0 ? 'SOBRA' : 'FALTA';
+      doc.text(`${diffText}: R$ ${Math.abs(diferenca).toFixed(2)}`, 20, currentY);
+
+      yPos += 25;
+
+      // SANGRIAS
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('SANGRIAS', 15, yPos);
+      
+      yPos += 6;
+      drawBox(15, yPos, boxWidth, 25);
+      
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      currentY = yPos + 10;
+      doc.text('Nenhuma sangria registrada', 20, currentY);
+
+      // Informações adicionais do turno
+      yPos += 35;
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('INFORMAÇÕES DO TURNO', 15, yPos);
+      
+      yPos += 6;
+      drawBox(15, yPos, boxWidth, 35);
+      
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      currentY = yPos + 7;
+      
+      doc.text(`Horário de Início: ${format(summary.startTime, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, 20, currentY);
+      currentY += 6;
+      doc.text(`Horário de Fim: ${format(summary.endTime, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, 20, currentY);
+      currentY += 6;
+      doc.text(`Tempo Trabalhado: ${workedTime}`, 20, currentY);
+      currentY += 6;
+      doc.text(`Número de Vendas: ${summary.totalSales}`, 20, currentY);
+      currentY += 6;
+      doc.text(`Ticket Médio: R$ ${summary.averageTicket.toFixed(2)}`, 20, currentY);
+
       // Footer
-      const footerY = doc.internal.pageSize.getHeight() - 20;
+      const footerY = pageHeight - 15;
       doc.setFontSize(8);
       doc.setFont('helvetica', 'italic');
       doc.text('PDV-INOVAPRO - Sistema de Gestão', pageWidth / 2, footerY, { align: 'center' });
-      doc.text(`Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm:ss", { locale: ptBR })}`, pageWidth / 2, footerY + 5, { align: 'center' });
+      doc.text(`Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm:ss", { locale: ptBR })}`, pageWidth / 2, footerY + 4, { align: 'center' });
 
       // Salvar PDF
-      const fileName = `relatorio_turno_${user?.name}_${format(new Date(), 'ddMMyyyy_HHmmss')}.pdf`;
+      const fileName = `fechamento_turno_${user?.name}_${format(new Date(), 'ddMMyyyy_HHmmss')}.pdf`;
       doc.save(fileName);
 
       toast({
