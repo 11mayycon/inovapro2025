@@ -18,7 +18,7 @@ interface Product {
   preco: number;
   quantidade_estoque: number;
   unidade: string;
-  descricao?: string;
+  descricao?: string[] | string;
   categoria?: string;
   subcategoria?: string;
 }
@@ -118,7 +118,7 @@ export default function Produtos() {
       preco: product.preco.toString(),
       quantidade_estoque: product.quantidade_estoque.toString(),
       unidade: product.unidade,
-      descricao: product.descricao || '',
+      descricao: Array.isArray(product.descricao) ? product.descricao.join(', ') : (product.descricao || ''),
       categoria: product.categoria || '',
       subcategoria: product.subcategoria || '',
     });
@@ -187,7 +187,7 @@ export default function Produtos() {
         preco: parseFloat(formData.preco),
         quantidade_estoque: parseInt(formData.quantidade_estoque) || 0,
         unidade: formData.unidade,
-        descricao: formData.descricao || null,
+        descricao: formData.descricao ? [formData.descricao] : null,
         categoria: formData.categoria || null,
         subcategoria: formData.subcategoria || null,
       };
