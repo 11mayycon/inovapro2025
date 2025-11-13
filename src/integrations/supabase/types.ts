@@ -43,6 +43,56 @@ export type Database = {
           },
         ]
       }
+      agendamentos: {
+        Row: {
+          carro_id: string | null
+          cliente: string
+          created_at: string | null
+          data: string
+          horario: string
+          id: string
+          observacoes: string | null
+          servico: string
+          status: Database["public"]["Enums"]["status_agendamento"]
+          telefone: string
+          updated_at: string | null
+        }
+        Insert: {
+          carro_id?: string | null
+          cliente: string
+          created_at?: string | null
+          data: string
+          horario: string
+          id?: string
+          observacoes?: string | null
+          servico: string
+          status?: Database["public"]["Enums"]["status_agendamento"]
+          telefone: string
+          updated_at?: string | null
+        }
+        Update: {
+          carro_id?: string | null
+          cliente?: string
+          created_at?: string | null
+          data?: string
+          horario?: string
+          id?: string
+          observacoes?: string | null
+          servico?: string
+          status?: Database["public"]["Enums"]["status_agendamento"]
+          telefone?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendamentos_carro_id_fkey"
+            columns: ["carro_id"]
+            isOneToOne: false
+            referencedRelation: "carros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -75,6 +125,42 @@ export type Database = {
           },
         ]
       }
+      carros: {
+        Row: {
+          cliente: string
+          created_at: string | null
+          id: string
+          marca: string
+          modelo: string
+          observacoes: string | null
+          placa: string
+          telefone: string
+          updated_at: string | null
+        }
+        Insert: {
+          cliente: string
+          created_at?: string | null
+          id?: string
+          marca: string
+          modelo: string
+          observacoes?: string | null
+          placa: string
+          telefone: string
+          updated_at?: string | null
+        }
+        Update: {
+          cliente?: string
+          created_at?: string | null
+          id?: string
+          marca?: string
+          modelo?: string
+          observacoes?: string | null
+          placa?: string
+          telefone?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       contagens_inventario: {
         Row: {
           categoria: string | null
@@ -88,6 +174,7 @@ export type Database = {
           product_id: string | null
           quantidade_contada: number
           quantidade_estoque: number | null
+          updated_at: string | null
           usuario: string | null
         }
         Insert: {
@@ -102,6 +189,7 @@ export type Database = {
           product_id?: string | null
           quantidade_contada: number
           quantidade_estoque?: number | null
+          updated_at?: string | null
           usuario?: string | null
         }
         Update: {
@@ -116,6 +204,7 @@ export type Database = {
           product_id?: string | null
           quantidade_contada?: number
           quantidade_estoque?: number | null
+          updated_at?: string | null
           usuario?: string | null
         }
         Relationships: [
@@ -127,6 +216,106 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      expedicao: {
+        Row: {
+          created_at: string | null
+          data_retirada: string | null
+          id: string
+          observacoes: string | null
+          producao_id: string
+          recibo_numero: string
+          retirado_por: string
+        }
+        Insert: {
+          created_at?: string | null
+          data_retirada?: string | null
+          id?: string
+          observacoes?: string | null
+          producao_id: string
+          recibo_numero: string
+          retirado_por: string
+        }
+        Update: {
+          created_at?: string | null
+          data_retirada?: string | null
+          id?: string
+          observacoes?: string | null
+          producao_id?: string
+          recibo_numero?: string
+          retirado_por?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expedicao_producao_id_fkey"
+            columns: ["producao_id"]
+            isOneToOne: false
+            referencedRelation: "producao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      garantias: {
+        Row: {
+          ativa: boolean
+          carro_id: string
+          created_at: string | null
+          id: string
+          observacao: string | null
+          servico: string
+          validade: string
+        }
+        Insert: {
+          ativa?: boolean
+          carro_id: string
+          created_at?: string | null
+          id?: string
+          observacao?: string | null
+          servico: string
+          validade: string
+        }
+        Update: {
+          ativa?: boolean
+          carro_id?: string
+          created_at?: string | null
+          id?: string
+          observacao?: string | null
+          servico?: string
+          validade?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "garantias_carro_id_fkey"
+            columns: ["carro_id"]
+            isOneToOne: false
+            referencedRelation: "carros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      horarios_disponiveis: {
+        Row: {
+          created_at: string | null
+          dia: string
+          disponivel: boolean
+          hora: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          dia: string
+          disponivel?: boolean
+          hora: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          dia?: string
+          disponivel?: boolean
+          hora?: string
+          id?: string
+        }
+        Relationships: []
       }
       inventario_logs: {
         Row: {
@@ -165,27 +354,99 @@ export type Database = {
       }
       ponto: {
         Row: {
-          id: string
-          user_id: string
+          created_at: string | null
           entrada: string
+          id: string
           saida: string | null
+          updated_at: string | null
+          user_id: string
         }
         Insert: {
+          created_at?: string | null
+          entrada?: string
           id?: string
-          user_id: string
-          entrada: string
           saida?: string | null
+          updated_at?: string | null
+          user_id: string
         }
         Update: {
-          id?: string
-          user_id?: string
+          created_at?: string | null
           entrada?: string
+          id?: string
           saida?: string | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "ponto_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      producao: {
+        Row: {
+          carro_id: string
+          cor: string
+          created_at: string | null
+          data_finalizacao: string | null
+          data_inicio: string | null
+          fotos: string[] | null
+          funcionario_id: string | null
+          id: string
+          material: string
+          observacoes: string | null
+          prazo: string
+          status: Database["public"]["Enums"]["status_producao"]
+          tipo_capa: string
+          updated_at: string | null
+        }
+        Insert: {
+          carro_id: string
+          cor: string
+          created_at?: string | null
+          data_finalizacao?: string | null
+          data_inicio?: string | null
+          fotos?: string[] | null
+          funcionario_id?: string | null
+          id?: string
+          material: string
+          observacoes?: string | null
+          prazo: string
+          status?: Database["public"]["Enums"]["status_producao"]
+          tipo_capa: string
+          updated_at?: string | null
+        }
+        Update: {
+          carro_id?: string
+          cor?: string
+          created_at?: string | null
+          data_finalizacao?: string | null
+          data_inicio?: string | null
+          fotos?: string[] | null
+          funcionario_id?: string | null
+          id?: string
+          material?: string
+          observacoes?: string | null
+          prazo?: string
+          status?: Database["public"]["Enums"]["status_producao"]
+          tipo_capa?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "producao_carro_id_fkey"
+            columns: ["carro_id"]
+            isOneToOne: false
+            referencedRelation: "carros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "producao_funcionario_id_fkey"
+            columns: ["funcionario_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -198,37 +459,116 @@ export type Database = {
           codigo_barras: string | null
           contagem_fechada: boolean | null
           created_at: string | null
-          descricao: string | null
+          descricao: string[] | null
           id: string
-          nome: string
+          id_firebird: string | null
+          nome: string | null
           preco: number
           quantidade_estoque: number
+          subcategoria: string | null
+          ultima_movimentacao: string | null
           unidade: string | null
           updated_at: string | null
         }
         Insert: {
+          categoria?: string | null
           codigo_barras?: string | null
           contagem_fechada?: boolean | null
           created_at?: string | null
-          descricao?: string | null
+          descricao?: string[] | null
           id?: string
-          nome: string
+          id_firebird?: string | null
+          nome?: string | null
           preco?: number
           quantidade_estoque?: number
+          subcategoria?: string | null
+          ultima_movimentacao?: string | null
           unidade?: string | null
           updated_at?: string | null
         }
         Update: {
+          categoria?: string | null
           codigo_barras?: string | null
           contagem_fechada?: boolean | null
           created_at?: string | null
-          descricao?: string | null
+          descricao?: string[] | null
           id?: string
-          nome?: string
+          id_firebird?: string | null
+          nome?: string | null
           preco?: number
           quantidade_estoque?: number
+          subcategoria?: string | null
+          ultima_movimentacao?: string | null
           unidade?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      products_movimentacoes: {
+        Row: {
+          created_at: string
+          id: string
+          motivo: string | null
+          product_id: string
+          quantidade: number
+          tipo: string
+          usuario: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          product_id: string
+          quantidade: number
+          tipo: string
+          usuario?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          product_id?: string
+          quantidade?: number
+          tipo?: string
+          usuario?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_movimentacoes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recebimentos: {
+        Row: {
+          created_at: string | null
+          data: string
+          forma_pagamento: string
+          id: string
+          observacoes: string | null
+          referencia: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string | null
+          data?: string
+          forma_pagamento: string
+          id?: string
+          observacoes?: string | null
+          referencia: string
+          valor: number
+        }
+        Update: {
+          created_at?: string | null
+          data?: string
+          forma_pagamento?: string
+          id?: string
+          observacoes?: string | null
+          referencia?: string
+          valor?: number
         }
         Relationships: []
       }
@@ -362,6 +702,7 @@ export type Database = {
       }
       sales: {
         Row: {
+          bandeira: string | null
           created_at: string | null
           forma_pagamento: Database["public"]["Enums"]["payment_method"] | null
           id: string
@@ -369,6 +710,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          bandeira?: string | null
           created_at?: string | null
           forma_pagamento?: Database["public"]["Enums"]["payment_method"] | null
           id?: string
@@ -376,6 +718,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          bandeira?: string | null
           created_at?: string | null
           forma_pagamento?: Database["public"]["Enums"]["payment_method"] | null
           id?: string
@@ -493,42 +836,77 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           blocked: boolean | null
           cargo: string | null
           cpf: string | null
           created_at: string | null
-          email: string
+          email: string | null
+          expires_at: string | null
           id: string
           name: string
           password_hash: string
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string | null
+          whatsapp_number: string | null
         }
         Insert: {
           blocked?: boolean | null
           cargo?: string | null
           cpf?: string | null
           created_at?: string | null
-          email: string
+          email?: string | null
+          expires_at?: string | null
           id?: string
           name: string
           password_hash: string
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
+          whatsapp_number?: string | null
         }
         Update: {
           blocked?: boolean | null
           cargo?: string | null
           cpf?: string | null
           created_at?: string | null
-          email?: string
+          email?: string | null
+          expires_at?: string | null
           id?: string
           name?: string
           password_hash?: string
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
+          whatsapp_number?: string | null
         }
         Relationships: []
       }
@@ -602,6 +980,14 @@ export type Database = {
         Args: { p_product_id: string }
         Returns: undefined
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
       register_waste: {
         Args: {
           p_image_paths: string[]
@@ -644,6 +1030,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "funcionario"
       movement_type: "entrada" | "saida" | "ajuste" | "desperdicio"
       payment_method:
         | "dinheiro"
@@ -651,6 +1038,8 @@ export type Database = {
         | "cartao_credito"
         | "pix"
         | "outro"
+      status_agendamento: "agendado" | "confirmado" | "cancelado" | "concluido"
+      status_producao: "aguardando" | "em_producao" | "finalizado" | "expedido"
       user_role: "admin" | "employee"
     }
     CompositeTypes: {
@@ -779,6 +1168,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "funcionario"],
       movement_type: ["entrada", "saida", "ajuste", "desperdicio"],
       payment_method: [
         "dinheiro",
@@ -787,6 +1177,8 @@ export const Constants = {
         "pix",
         "outro",
       ],
+      status_agendamento: ["agendado", "confirmado", "cancelado", "concluido"],
+      status_producao: ["aguardando", "em_producao", "finalizado", "expedido"],
       user_role: ["admin", "employee"],
     },
   },
