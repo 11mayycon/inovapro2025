@@ -36,15 +36,17 @@ export function Layout({ children, title, showBack = false }: LayoutProps) {
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
               )}
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                <Package className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold text-white uppercase">
-                  {title || 'PDV-INOVAPRO'}
-                </h1>
-                <p className="text-xs md:text-sm text-blue-200">Sistema de Gestão</p>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
+              <Package className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white">
+                {title || 'C.P.V'}
+              </h1>
+              <p className="text-xs text-blue-200">Controle de Produção Veicular</p>
+            </div>
+          </div>
             </div>
             <div className="flex items-center gap-2 md:gap-4">
               <div className="text-right hidden sm:block">
